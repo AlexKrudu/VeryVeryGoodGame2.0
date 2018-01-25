@@ -42,7 +42,8 @@ class Ladder:
 class Player(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
-        self.on_ladder = False
+        self.on_bottom_ladder = False
+        self.on_top_ladder = False
         self.moving = False
         self.move_speed = 1
         self.id = 0
@@ -52,7 +53,6 @@ class Player(pygame.sprite.Sprite):
         self.default_x = x
         self.default_y = y
         self.mouse_pos = 0
-        self.pos_y = None
         self.image = pygame.Surface((self.width, self.height))
         self.image.fill(pygame.Color("#888888"))
         self.rect = pygame.Rect(x, y, self.width, self.height)
@@ -73,21 +73,19 @@ class Player(pygame.sprite.Sprite):
         self.rect.x += self.current_speed
         return True
 
-    def move_ladder(self,mouse_pos):
-        self.mouse_pos = mouse_pos
-        if self.mouse_pos > self.rect.y:
-            self.current_speed = self.move_speed
-
-        if self.mouse_pos < self.rect.y:
-            self.current_speed = -self.move_speed
-
-        if self.mouse_pos == self.rect.y:
-            self.moving = False
-            self.current_speed = 0
-            return False
-
-        self.rect.y += self.current_speed
-        return True
+    def move_ladder(self):
+        if self.on_bottom_ladder:
+            if self.rect.y > 480:
+                self.rect.y -= self.move_speed
+                return False
+            if self.rect.y == 480:
+                return True
+        else:
+            if self.rect.y < 576:
+                self.rect.y += self.move_speed
+                return False
+            if self.rect.y == 576:
+                return True
 
 
     def draw(self, screen):  # Выводим себя на экран
@@ -162,20 +160,24 @@ def main():
                             if pygame.Rect(i.x, i.y, i.width, i.height).collidepoint(e.pos):
                                 player.moving = True
                                 player.move(e.pos[0])
-                                player.on_ladder = True
-                                player.pos_y = e.pos[1]
+                                if player.rect.y == 576:
+                                    player.on_bottom_ladder = True
+                                else:
+                                    player.on_top_ladder = True
 
             if e.type == pygame.MOUSEBUTTONDOWN and e.button == 3:
                 player.moving = True
                 player.move(e.pos[0])
 
-        if player.on_ladder and not player.moving:
-            player.move_ladder(player.pos_y)
+        if (player.on_bottom_ladder or player.on_top_ladder) and not player.moving:
+            if player.move_ladder():
+                player.on_bottom_ladder = False
+                player.on_top_ladder = False
 
         if player.moving:
             player.move(player.mouse_pos)
 
-        # clock.tick(60)
+        clock.tick(120)
         map = Map()
         map.render(screen)
         player.draw(screen)
