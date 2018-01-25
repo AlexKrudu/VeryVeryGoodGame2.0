@@ -40,13 +40,20 @@ class Board:
     def get_click(self, mouse_pos, thing=''):
         cell = self.get_cell( mouse_pos)
         if cell:
-            self.on_click(cell, thing=thing)
+           return self.on_click(cell, thing=thing)
+
 
     def on_click(self, cell, thing = ''):
         print(cell)
         print(thing)
-        if thing:
+        if  not self.board[cell[1]][cell[0]]:
             self.board[cell[1]][cell[0]] = thing
+            return 0
+        else:
+            t = self.board[cell[1]][cell[0]]
+            self.board[cell[1]][cell[0]] = 0
+            return t
+
     def get_cell(self, mouse_pos):
         if mouse_pos[0] <= self.top or mouse_pos[0] >= self.top + self.cell_size * len(self.board[0]) or mouse_pos[1] <= self.left or mouse_pos[1] >= self.left + self.cell_size * len(self.board):
             return None

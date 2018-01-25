@@ -25,9 +25,8 @@ class Entity(pygame.sprite.Sprite):
         self.showInventory = False
         self.In_rect = None
 
-    def get_event(self, event):
+    def get_event(self, event, player):
         if event.type == pygame.MOUSEMOTION:
-            was_collided = self.collided
             self.collided = self.Rect.collidepoint(event.pos)
             if self.collided:
                 self.image = pygame.image.load("images/"+self.img+"F.png")
@@ -43,12 +42,13 @@ class Entity(pygame.sprite.Sprite):
                 self.showInventory = False
             elif self.showInventory and self.In_rect.collidepoint(event.pos):
                 thing = 'x'
-                self.board.get_click((event.pos[0]-self.Rect.x+self.In_rect.width, event.pos[1]-self.Rect.y+self.In_rect.height), thing)
+                t = self.board.get_click((event.pos[0]-self.Rect.x+self.In_rect.width, event.pos[1]-self.Rect.y+self.In_rect.height), thing)
+                player.add_to_inventory(t)
             self.pressed = False
 
 
 
-    def render(self, surface=-1):
+    def render(self, surface):
         screen.blit(self.image, self.Rect)
         if self.showInventory:
             inv = self.board.render()
