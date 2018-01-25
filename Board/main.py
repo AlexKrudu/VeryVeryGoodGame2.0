@@ -7,6 +7,12 @@ WIN_HEIGHT = 640# Высота
 DISPLAY = (WIN_WIDTH, WIN_HEIGHT)  # Группируем ширину и высоту в одну переменную
 BACKGROUND_COLOR = "darkblue"
 SCALE = 32
+on_ladder = False
+
+
+class Empty:
+    def __init__(self):
+        self.id = 9999999999999
 
 
 class Wall:
@@ -14,21 +20,39 @@ class Wall:
         self.id = 1
         self.width = SCALE
         self.height = SCALE
+        self.x = None
+        self.y = None
         self.color = pygame.Color("grey")
+
+
+class Ladder:
+    def __init__(self):
+        self.id = 2
+        self.width = SCALE
+        self.height = SCALE
+        self.x = None
+        self.y = None
+        self.color = pygame.Color("orange")
+
+    def on_click(self, player):
+        player.on_ladder = True
+
 
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
+        self.on_ladder = False
         self.moving = False
         self.move_speed = 1
-        self.id = 2
+        self.id = 0
         self.width = 22
         self.height = 32
         self.current_speed = 0
         self.default_x = x
         self.default_y = y
         self.mouse_pos = 0
+        self.pos_y = None
         self.image = pygame.Surface((self.width, self.height))
         self.image.fill(pygame.Color("#888888"))
         self.rect = pygame.Rect(x, y, self.width, self.height)
@@ -49,32 +73,49 @@ class Player(pygame.sprite.Sprite):
         self.rect.x += self.current_speed
         return True
 
+    def move_ladder(self,mouse_pos):
+        self.mouse_pos = mouse_pos
+        if self.mouse_pos > self.rect.y:
+            self.current_speed = self.move_speed
+
+        if self.mouse_pos < self.rect.y:
+            self.current_speed = -self.move_speed
+
+        if self.mouse_pos == self.rect.y:
+            self.moving = False
+            self.current_speed = 0
+            return False
+
+        self.rect.y += self.current_speed
+        return True
+
+
     def draw(self, screen):  # Выводим себя на экран
         screen.blit(self.image, (self.rect.x, self.rect.y))
 
 
 class Map:
     def __init__(self):
-        self.objects = ["1111111111111111111111111",
-                        "1                       1",
-                        "1                       1",
-                        "1                       1",
-                        "1                       1",
-                        "1                       1",
-                        "1                       1",
-                        "1                       1",
-                        "1                       1",
-                        "1                       1",
-                        "1                       1",
-                        "1                       1",
-                        "1                       1",
-                        "1                       1",
-                        "1                       1",
-                        "1                       1",
-                        "1                       1",
-                        "1                       1",
-                        "1                       1",
-                        "1111111111111111111111111"]
+        self.objects = [[],
+                        [],
+                        [],
+                        [],
+                        [],
+                        [],
+                        [],
+                        [],
+                        [],
+                        [],
+                        [],
+                        [],
+                        [],
+                        [],
+                        [],
+                        [],
+                        [Empty(), Wall(), Wall(), Wall()],
+                        [Empty(), Ladder()],
+                        [Empty(), Ladder()],
+                        [Wall(), Wall(), Wall(), Wall(), Wall(), Wall(), Wall(), Wall(), Wall(), Wall(), Wall(), Wall(), Wall(), Wall(), Wall(), Wall(), Wall(), Wall(), Wall(), Wall(), Wall(), Wall(), Wall(), Wall(), Wall(), Wall()]]
 
     def render(self, screen):
         x = 0
@@ -82,10 +123,16 @@ class Map:
         screen.fill(pygame.Color(BACKGROUND_COLOR))
         for i in self.objects:
             for j in i:
-                if j == "1":
+                if j.id == 1:
                     surf = pygame.Surface((Wall().width, Wall().height))
                     surf.fill(Wall().color)
                     screen.blit(surf, (x, y))
+                if j.id == 2:
+                    surf = pygame.Surface((Ladder().width, Ladder().height))
+                    surf.fill(Ladder().color)
+                    screen.blit(surf, (x, y))
+                j.x = x
+                j.y = y
                 x += Wall().width
             y += Wall().height
             x = 0
@@ -93,6 +140,7 @@ class Map:
 
 def main():
     running = True
+    on_ladder = False
     clock = pygame.time.Clock()
     pygame.init()  # Инициация PyGame, обязательная строчка
     screen = pygame.display.set_mode(DISPLAY)  # Создаем окошко
@@ -107,14 +155,27 @@ def main():
             if e.type == pygame.QUIT:
                 running = False
 
+            if e.type == pygame.MOUSEBUTTONDOWN and e.button == 1:
+                for j in map.objects:
+                    for i in j:
+                        if i.id == 2:
+                            if pygame.Rect(i.x, i.y, i.width, i.height).collidepoint(e.pos):
+                                player.moving = True
+                                player.move(e.pos[0])
+                                player.on_ladder = True
+                                player.pos_y = e.pos[1]
+
             if e.type == pygame.MOUSEBUTTONDOWN and e.button == 3:
                 player.moving = True
                 player.move(e.pos[0])
 
+        if player.on_ladder and not player.moving:
+            player.move_ladder(player.pos_y)
+
         if player.moving:
             player.move(player.mouse_pos)
 
-        #clock.tick(60)
+        # clock.tick(60)
         map = Map()
         map.render(screen)
         player.draw(screen)
