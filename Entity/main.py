@@ -146,39 +146,31 @@ class Entity(pygame.sprite.Sprite):
 
 class Map:
     def __init__(self):
-        self.objects = ["1111111111111111111111111",
-                        "1                       1",
-                        "1                       1",
-                        "1                       1",
-                        "1                       1",
-                        "1                       1",
-                        "1                       1",
-                        "1                       1",
-                        "1                       1",
-                        "1                       1",
-                        "1                       1",
-                        "1                       1",
-                        "1                       1",
-                        "1                       1",
-                        "1                       1",
-                        "1                       1",
-                        "1                       1",
-                        "1                       1",
-                        "1                       1",
-                        "1111111111111111111111111"]
+        self.objects = [
+                        "    22                  ",
+                        "    22                  ",
+                        "                        ",
+                        "                        ",
+                        "                        ",
+                        "                        "]
 
     def render(self, screen):
         x = 0
-        y = 0
+        y = WIN_HEIGHT-64-32
         screen.fill(pygame.Color(BACKGROUND_COLOR))
         for i in self.objects:
+            image = pygame.image.load("images/room.png")
             for j in i:
                 if j == "1":
                     surf = pygame.Surface((Wall().width, Wall().height))
                     surf.fill(Wall().color)
                     screen.blit(surf, (x, y))
-                x += Wall().width
-            y += Wall().height
+                if j == "2":
+                    surf = pygame.Surface((image.get_rect().width, image.get_rect().height))
+                    surf.blit(image, (0, 0))
+                    screen.blit(surf, (x, y))
+                x += image.get_rect().width
+            y -= image.get_rect().height
             x = 0
 
 
@@ -191,8 +183,8 @@ def main():
     # будем использовать как фон
     screen.fill(pygame.Color(BACKGROUND_COLOR))  # Заливаем поверхность сплошным цветом
     player = Player(32, 576)
-    table = Entity(100, 100, "table")
-    table1 = Entity(300, 300, "table")
+    table = Entity(400, WIN_HEIGHT-50-32, "shelf")
+    table1 = Entity(500,  WIN_HEIGHT-50-32, "shelf")
     player.draw(screen)
     map = Map()
     while running:  # Основной цикл программы
