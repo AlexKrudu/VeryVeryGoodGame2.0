@@ -41,6 +41,7 @@ class Ladder:
 class Player(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
+        self.stage = 1
         self.on_bottom_ladder = False
         self.on_top_ladder = False
         self.on_ladder = False
@@ -82,12 +83,14 @@ class Player(pygame.sprite.Sprite):
                 self.rect.y -= self.move_speed
                 return False
             if self.rect.y == height:
+                self.stage += 1
                 return True
         else:
             if self.rect.y < height:
                 self.rect.y += self.move_speed
                 return False
             if self.rect.y == height:
+                self.stage -= 1
                 return True
 
 
@@ -247,8 +250,8 @@ class Door(Entity):
 class Map:
     def __init__(self):
         self.objects = [
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 1, 1, 1, 1, 1, 1, 1, 5, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -261,7 +264,7 @@ class Map:
             [0, 1, 0, 3, 2, 2, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 1, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 1, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 1, 1, 1, 5, 1, 1, 1, 1, 1, 1, 5, 1, 1, 1, 1, 1, 1, 1, 1, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5, 1, 1, 1, 1, 1, 1, 1, 1, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -337,16 +340,37 @@ def main():
                 for j in range(len(map.objects[i])):
                     if map.objects[i][j] == 2:
                         if e.type == pygame.MOUSEBUTTONDOWN and e.button == 1:
-                            if map.obj[i][j].rect.collidepoint(e.pos) and not player.on_ladder:
-                                player.moving = True
-                                player.move(e.pos[0])
-                                if e.pos[1] <= player.rect.y + player.rect.height:
-                                    height = player.rect.y + player.rect.height - 160 - SCALE
-                                    player.on_bottom_ladder = True
-                                else:
-                                    player.on_top_ladder = True
-                                    height = player.rect.y - player.rect.height + 160 + SCALE
-                                player.on_ladder = True
+                            y = len(map.objects) - 1 - player.stage * 7
+                            # y =(player.rect.y+player.rect.height-368) // len(map.objects)-1
+                            # y = ((player.rect.y+player.rect.height) / (screen.get_rect().height + 368)) * len(map.objects)
+                            flag = False
+                            for k in range(len(map.objects[y])):
+                                if map.objects[y][k] == 5:
+                                    if map.obj[y][k].Rect.collidepoint(e.pos):
+                                        flag = True
+                                    if e.pos[0] < player.rect.x:
+                                        if e.pos[0] <= map.obj[y][k].Rect.x + map.obj[y][
+                                            k].Rect.width <= player.rect.x and map.obj[y][k].state == False:
+                                            flag = True
+                                            # if map.obj[y][i].Rect.x < player.rect.x and player.rect.x - e.pos[0] > player.rect.x-player.rect.width - map.obj[y][i].Rect.x and map.obj[y][i].state == False:
+                                            #    flag = True
+                                    else:
+                                        # if map.obj[y][i].Rect.x > player.rect.x and map.obj[y][i].state == False:
+                                        #    flag = True
+                                        if player.rect.x <= map.obj[y][k].Rect.x <= e.pos[0] and map.obj[y][
+                                            k].state == False:
+                                            flag = True
+                            if not flag:
+                                if map.obj[i][j].rect.collidepoint(e.pos) and not player.on_ladder:
+                                    player.moving = True
+                                    player.move(e.pos[0])
+                                    if e.pos[1] <= player.rect.y + player.rect.height:
+                                        height = player.rect.y + player.rect.height - 160 - SCALE
+                                        player.on_bottom_ladder = True
+                                    else:
+                                        player.on_top_ladder = True
+                                        height = player.rect.y - player.rect.height + 160 + SCALE
+                                    player.on_ladder = True
                     if map.objects[i][j] == 3:
                         map.obj[i][j].get_event(e, player)
                     if map.objects[i][j] == 5:
@@ -355,15 +379,23 @@ def main():
 
 
             if e.type == pygame.MOUSEBUTTONDOWN and e.button == 3 and not (player.on_bottom_ladder or player.on_top_ladder):
-                y =(player.rect.y+player.rect.height-368) // len(map.objects)-1
+                y = len(map.objects) - 1 - player.stage*7
+                #y =(player.rect.y+player.rect.height-368) // len(map.objects)-1
+                #y = ((player.rect.y+player.rect.height) / (screen.get_rect().height + 368)) * len(map.objects)
                 flag = False
                 for i in range(len(map.objects[y])):
                     if map.objects[y][i] == 5:
+                        if map.obj[y][i].Rect.collidepoint(e.pos):
+                            flag = True
                         if e.pos[0] < player.rect.x:
-                            if map.obj[y][i].Rect.x < player.rect.x and player.rect.x - e.pos[0] > player.rect.x-player.rect.width - map.obj[y][i].Rect.x and map.obj[y][i].state == False:
+                            if e.pos[0] <= map.obj[y][i].Rect.x +  map.obj[y][i].Rect.width <= player.rect.x and map.obj[y][i].state == False:
                                 flag = True
+                            # if map.obj[y][i].Rect.x < player.rect.x and player.rect.x - e.pos[0] > player.rect.x-player.rect.width - map.obj[y][i].Rect.x and map.obj[y][i].state == False:
+                            #    flag = True
                         else:
-                            if map.obj[y][i].Rect.x > player.rect.x and e.pos[0]- player.rect.x >  map.obj[y][i].Rect.x - player.rect.x-player.rect.width and map.obj[y][i].state == False:
+                            #if map.obj[y][i].Rect.x > player.rect.x and map.obj[y][i].state == False:
+                            #    flag = True
+                            if player.rect.x <= map.obj[y][i].Rect.x <= e.pos[0] and map.obj[y][i].state == False:
                                 flag = True
 
                 if not flag:
@@ -379,7 +411,7 @@ def main():
         if player.moving:
             player.move(player.mouse_pos)
 
-        clock.tick(120)
+        clock.tick(150)
         map.render(screen)
         player.draw(screen)
         pygame.display.flip()
