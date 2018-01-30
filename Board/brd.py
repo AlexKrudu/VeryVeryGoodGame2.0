@@ -1,4 +1,5 @@
 import pygame
+import main
 
 
 class Board:
@@ -28,7 +29,12 @@ class Board:
         for i in range(len(self.board)):
             for j in range(len(self.board[i])):
                 if self.board[i][j] == 'x':
-                    image = pygame.image.load("images\candle.png")
+                    image = main.candle
+                    rect = image.get_rect()
+                    rect.left, rect.top = (j * self.cell_size + self.left, i * self.cell_size + self.top)
+                    surface.blit(image, rect)
+                elif self.board[i][j] == 'r':
+                    image = main.lom
                     rect = image.get_rect()
                     rect.left, rect.top = (j * self.cell_size + self.left, i * self.cell_size + self.top)
                     surface.blit(image, rect)
@@ -44,8 +50,6 @@ class Board:
 
 
     def on_click(self, cell, thing = ''):
-        print(cell)
-        print(thing)
         if  not self.board[cell[1]][cell[0]]:
             self.board[cell[1]][cell[0]] = thing
             return 0
