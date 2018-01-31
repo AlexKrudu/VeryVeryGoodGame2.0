@@ -1,7 +1,7 @@
 # Импортируем библиотеку pygame
 import pygame
 import brd
-
+import npc
 # Объявляем переменные
 WIN_WIDTH = 1280  # Ширина создаваемого окна
 WIN_HEIGHT = 720# Высота
@@ -47,7 +47,9 @@ class Ladder:
         self.image = ladder
         self.x = x
         self.y = y
-        self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
+        self.rect = self.image.get_rect()
+        self.rect.top = y
+        self.rect.left = x
         self.color = pygame.Color("orange")
 
 
@@ -99,12 +101,14 @@ class Player(pygame.sprite.Sprite):
         return True
 
     def move_ladder(self, height):
+        self.image = pygame.Surface((0, 0))
         if self.on_bottom_ladder:
             if self.rect.y > height:
                 self.rect.y -= self.move_speed
                 return False
             if self.rect.y == height:
                 self.stage += 1
+                self.image = pygame.Surface((self.width, self.height))
                 return True
         else:
             if self.rect.y < height:
@@ -112,6 +116,8 @@ class Player(pygame.sprite.Sprite):
                 return False
             if self.rect.y == height:
                 self.stage -= 1
+                self.image = pygame.Surface((self.width, self.height))
+                self.image.fill(pygame.Color("#888888"))
                 return True
 
 
@@ -122,6 +128,92 @@ class Player(pygame.sprite.Sprite):
             r = inv.get_rect()
             screen.blit(inv, (self.rect.x - r.width, self.rect.y - r.height))
             self.In_rect = pygame.Rect(self.rect.x - r.width, self.rect.y - r.height, r.width, r.height)
+
+class NPC(pygame.sprite.Sprite):
+    def __init__(self, x, y, name, image, dialogs,   thing = None, ):
+        pygame.sprite.Sprite.__init__(self)
+        self.x = x
+        self.y = y
+        self.to_go = x
+        self.name = name
+        self.move_speed = 1
+        self.image = pygame.image.load("images/john.png").convert_alpha()
+        self.face = pygame.image.load("images/johnF.png").convert_alpha()
+        self.rect = self.image.get_rect()
+        self.rect.left, self.rect.top = (x, y)
+        self.thing = thing
+        self.moving = False
+        self.level = 0
+        self.dialogs = dialogs
+        self.text = None
+        self.font = pygame.font.Font(None, 50)
+
+    def get_event(self, event, player):
+        if event.type == pygame.MOUSEBUTTONUP and event.button == 1 and self.rect.collidepoint(event.pos):
+            for i in player.board.board:
+                if self.dialogs[self.level][2] in i or self.dialogs[self.level][2] == 0:
+                    self.text = self.font.render(self.dialogs[self.level][1], 1,  pygame.Color("black"), pygame.SRCALPHA)
+                    if self.level != len(self.dialogs)-1:
+                        self.level+=1
+                    else:
+                        if self.thing:
+                            f = False
+                            for i in range(len(player.board.board)):
+                                if 0 in player.board.board[i]:
+                                    player.player.board.board[i][player.board.board.index(0)] = self.thing
+                                    self.thing = 0
+                                    f = True
+                            if f:
+                                self.text = self.font.render("Освободите свой инвентарь.", 1, pygame.Color("black"),
+                                                             pygame.SRCALPHA)
+                    text = self.text
+                    self.text = None
+                    return (text, self.face)
+            self.text = self.font.render(self.dialogs[self.level][0], 1, pygame.Color("black"), pygame.SRCALPHA)
+            text = self.text
+            self.text = None
+            return (text, self.face)
+
+    def move(self):
+        if self.to_go-self.rect.width > self.x:
+            self.x += 1
+            self.rect.x+=1
+
+        elif self.to_go < self.x:
+            self.x -= 1
+            self.rect.x -= 1
+
+        else:
+            self.to_go = self.x
+
+            self.moving = False
+    def render(self, surface):
+        surface.blit(self.image, (self.x, self.y))
+
+
+
+
+class DialogBox:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+        self.dialogs = []
+
+    def update(self, dialog):
+        if dialog:
+            if len(self.dialogs) == 3:
+                self.dialogs.pop(0)
+                self.dialogs.append(dialog)
+            else:
+                self.dialogs.append(dialog)
+
+    def render(self, surface):
+        count = 0
+        for i in self.dialogs:
+            surface.blit(i[1], (self.x, self.y+count))
+            rendered_rect = i[0].get_rect(x=self.x+50, y=self.y+count)
+            surface.blit(i[0], rendered_rect)
+            count +=50
 
 
 class Entity(pygame.sprite.Sprite):
@@ -159,8 +251,8 @@ class Entity(pygame.sprite.Sprite):
             if self.pressed:
                 self.showInventory = True
                 player.showInventory = True
-            elif self.showInventory and not self.In_rect.collidepoint(event.pos) and not player.In_rect.collidepoint(
-                    event.pos):
+
+            elif self.showInventory and not self.In_rect.collidepoint(event.pos) and not player.In_rect.collidepoint(event.pos):
                 self.showInventory = False
                 player.showInventory = False
                 self.thing = None
@@ -196,10 +288,8 @@ class Entity(pygame.sprite.Sprite):
                         f = False
                         for i in range(len(player.board.board)):
                             for j in range(len(player.board.board[i])):
-                                print(player.board.board[i][j])
                                 if player.board.board[i][j] == 0:
                                     player.board.board[i][j] = self.thing
-                                    print(player.board.board[i][j])
                                     f = True
                                     break
                             if f:
@@ -216,24 +306,25 @@ class Entity(pygame.sprite.Sprite):
             self.In_rect = pygame.Rect(self.x - r.width, self.y - r.height, r.width, r.height)
 
 class Door(Entity):
-    def __init__(self, x, y, image, key):
+    def __init__(self, x, y, image, key=None, npc=None):
         super().__init__(x,y,image, [])
         self.state = False
         self.key = key
+        self.npc = npc
+        self.npc_door = True
 
     def get_event(self, event, player):
-        if event.type == pygame.MOUSEMOTION:
+        if not event:
+            self.npc.move()
+        elif event.type == pygame.MOUSEMOTION:
             was_collided = self.collided
             self.collided = self.Rect.collidepoint(event.pos)
             if self.collided:
                 self.image = pygame.image.load("images/" + self.img + "F.png").convert_alpha()
             else:
                 self.image = pygame.image.load("images/" + self.img + '.png').convert_alpha()
-        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            print(self.Rect.collidepoint(event.pos))
+        elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             if self.Rect.collidepoint(event.pos):
-            # player.move(self.Rect.x-player.rect.width)
-            # if player.rect.x+player.rect.width == self.Rect.x:
                 self.change_state(player)
 
 
@@ -249,7 +340,6 @@ class Door(Entity):
                 self.img = self.img[:-1]
                 self.image = pygame.image.load("images/" + self.img + '.png').convert_alpha()
                 self.Rect = pygame.Rect(self.Rect.x, self.Rect.y, self.image.get_rect().width, self.Rect.height)
-
         else:
             f = False
             for i in range(len(player.board.board)):
@@ -269,10 +359,21 @@ class Door(Entity):
                             self.image = pygame.image.load("images/" + self.img + '.png').convert_alpha()
                             self.Rect = pygame.Rect(self.Rect.x, self.Rect.y, self.image.get_rect().width, self.Rect.height)
                             f = True
+
                 if f:
                     break
+            if self.npc:
+                self.npc.to_go = self.Rect.x
+                self.npc.moving = True
 
     def render(self, surface):
+        if self.npc and (self.npc.rect.x == self.Rect.x - self.npc.rect.width or self.npc.rect.x == self.Rect.x) and not self.state and  self.npc_door:
+            self.state = ~self.state
+            self.img += "O"
+            self.image = pygame.image.load("images/" + self.img + '.png').convert_alpha()
+            self.Rect = pygame.Rect(self.Rect.x, self.Rect.y, self.image.get_rect().width, self.Rect.height)
+            self.key = None
+            self.npc_door = False
         surface.blit(self.image, self.Rect)
 
 
@@ -292,21 +393,21 @@ class Map:
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 30, 1, 1, 1, 1, 1, 1, 30, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 30, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 30, 1, 1, 1, 1, 1, 1, 40, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 40, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 0, 2, 0, 0, 0, 0, 14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 30, 1, 1, 1, 1, 1, 1, 30, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 30, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 50, 1, 1, 1, 1, 1, 1, 60, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 30, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 16, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 0, 2, 0, 0, 0, 0, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 30, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 30, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 30, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 40, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 30, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 30, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 13, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -315,7 +416,11 @@ class Map:
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
         ]
+        self.npc = [NPC(232, 288 + DELTA, "h", "john",
+                 [("Привет, есть свечка?", "Спасибо", "x"), ("Я думаю тебе стоит пойти вниз", '', None)]), NPC(640, 288 + DELTA, "h", "john",
+                 [("Привет, есть свечка?", "Спасибо", "x"), ("Я думаю тебе стоит пойти вниз", '', None)])]
         self.obj = []
+        self.obj1 = []
         x = 0
         y = 0
         for i in range(len(self.objects)):
@@ -348,8 +453,20 @@ class Map:
                 elif self.objects[i][j] == 2:
                     obj = Ladder(x, y+DELTA)
                     self.obj[i][j] = obj
+                elif self.objects[i][j] == 40:
+                    obj = Door(x, y + DELTA, "Door1")
+                    self.obj[i][j] = obj
                 elif self.objects[i][j] == 30:
                     obj = Door(x, y + DELTA, "Door1", "x")
+                    self.obj[i][j] = obj
+                elif self.objects[i][j] == 50:
+                    obj = Door(x, y + DELTA, "Door1", "x", self.npc[0])
+                    self.obj1.append(obj)
+                    self.obj[i][j] = obj
+                elif self.objects[i][j] == 60:
+                    print(1)
+                    obj = Door(x, y + DELTA, "Door1", "x", self.npc[1])
+                    self.obj1.append(obj)
                     self.obj[i][j] = obj
                 x += Wall().width
             y += Wall().height
@@ -390,6 +507,9 @@ class Map:
                     if p and type(p) != Ladder :
                         p.render(screen)
 
+            for k in self.npc:
+                k.render(screen)
+
 
 
 
@@ -400,12 +520,13 @@ def main():
     # будем использовать как фон
     #screen.fill(pygame.Color(BACKGROUND_COLOR))  # Заливаем поверхность сплошным цветом
 
-
     screen.blit(bg, (0, 0))
     player = Player(16, 720-64-16)
     player.draw(screen)
     map = Map()
     map.render(screen)
+
+    dialog = DialogBox(50, 10)
     while running:  # Основной цикл программы
         screen.blit(bg, (0, 0))
         for e in pygame.event.get():  # Обрабатываем события
@@ -417,29 +538,22 @@ def main():
                     if map.objects[i][j] == 2:
                         if e.type == pygame.MOUSEBUTTONDOWN and e.button == 1:
                             y = len(map.objects) - 1 - player.stage * 7
-                            # y =(player.rect.y+player.rect.height-368) // len(map.objects)-1
-                            # y = ((player.rect.y+player.rect.height) / (screen.get_rect().height + 368)) * len(map.objects)
                             flag = False
                             for k in range(len(map.objects[y])):
                                 if map.objects[y][k] == 30:
                                     if map.obj[y][k].Rect.collidepoint(e.pos):
                                         flag = True
                                     if e.pos[0] < player.rect.x:
-                                        if e.pos[0] <= map.obj[y][k].Rect.x + map.obj[y][
-                                            k].Rect.width <= player.rect.x and map.obj[y][k].state == False:
+                                        if e.pos[0] <= map.obj[y][k].Rect.x + map.obj[y][k].Rect.width <= player.rect.x and map.obj[y][k].state == False:
                                             flag = True
-                                            # if map.obj[y][i].Rect.x < player.rect.x and player.rect.x - e.pos[0] > player.rect.x-player.rect.width - map.obj[y][i].Rect.x and map.obj[y][i].state == False:
-                                            #    flag = True
                                     else:
-                                        # if map.obj[y][i].Rect.x > player.rect.x and map.obj[y][i].state == False:
-                                        #    flag = True
-                                        if player.rect.x <= map.obj[y][k].Rect.x <= e.pos[0] and map.obj[y][
-                                            k].state == False:
+                                        if player.rect.x <= map.obj[y][k].Rect.x <= e.pos[0] and map.obj[y][k].state == False:
                                             flag = True
                             if not flag:
                                 if map.obj[i][j].rect.collidepoint(e.pos) and not player.on_ladder:
                                     player.moving = True
                                     player.move(e.pos[0])
+
                                     if e.pos[1] <= player.rect.y + player.rect.height:
                                         height = player.rect.y + player.rect.height - 160 - SCALE
                                         player.on_bottom_ladder = True
@@ -449,15 +563,13 @@ def main():
                                     player.on_ladder = True
                     if map.objects[i][j] in [3, 4, 5, 6, 7, 8, 9]:
                         map.obj[i][j].get_event(e, player)
-                    if map.objects[i][j] == 30:
+                    if map.objects[i][j] in [30, 40, 50, 60]:
                         map.obj[i][j].get_event(e, player)
 
 
 
             if e.type == pygame.MOUSEBUTTONDOWN and e.button == 3 and not (player.on_bottom_ladder or player.on_top_ladder):
                 y = len(map.objects) - 1 - player.stage*7
-                #y =(player.rect.y+player.rect.height-368) // len(map.objects)-1
-                #y = ((player.rect.y+player.rect.height) / (screen.get_rect().height + 368)) * len(map.objects)
                 flag = False
                 for i in range(len(map.objects[y])):
                     if map.objects[y][i] == 30:
@@ -466,11 +578,7 @@ def main():
                         if e.pos[0] < player.rect.x:
                             if e.pos[0] <= map.obj[y][i].Rect.x +  map.obj[y][i].Rect.width <= player.rect.x and map.obj[y][i].state == False:
                                 flag = True
-                            # if map.obj[y][i].Rect.x < player.rect.x and player.rect.x - e.pos[0] > player.rect.x-player.rect.width - map.obj[y][i].Rect.x and map.obj[y][i].state == False:
-                            #    flag = True
                         else:
-                            #if map.obj[y][i].Rect.x > player.rect.x and map.obj[y][i].state == False:
-                            #    flag = True
                             if player.rect.x <= map.obj[y][i].Rect.x <= e.pos[0] and map.obj[y][i].state == False:
                                 flag = True
 
@@ -478,6 +586,8 @@ def main():
                     player.moving = True
                     player.move(e.pos[0])
 
+            for l in map.npc:
+                dialog.update(l.get_event(e, player))
         if (player.on_bottom_ladder or player.on_top_ladder) and not player.moving:
             if player.move_ladder(height):
                 player.on_bottom_ladder = False
@@ -487,9 +597,13 @@ def main():
         if player.moving:
             player.move(player.mouse_pos)
 
-        clock.tick(2000)
+
         map.render(screen)
+        dialog.render(screen)
+        for l in map.obj1:
+            l.get_event(None, player)
         player.draw(screen)
+        clock.tick(30)
         pygame.display.flip()
 
 
