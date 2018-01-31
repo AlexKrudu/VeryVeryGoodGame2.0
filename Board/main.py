@@ -1,7 +1,7 @@
 # Импортируем библиотеку pygame
 import pygame
 import brd
-import npc
+
 # Объявляем переменные
 WIN_WIDTH = 1280  # Ширина создаваемого окна
 WIN_HEIGHT = 720# Высота
@@ -27,7 +27,7 @@ ladder = pygame.image.load("images/ladder.png").convert_alpha()
 bg = pygame.image.load("images/back.png").convert()
 candle = pygame.image.load("images/candle.png").convert_alpha()
 lom = pygame.image.load("images/lom.png").convert_alpha()
-
+pl_face = pygame.image.load("images/player_face.png").convert_alpha()
 
 class Wall:
     def __init__(self):
@@ -130,7 +130,7 @@ class Player(pygame.sprite.Sprite):
             self.In_rect = pygame.Rect(self.rect.x - r.width, self.rect.y - r.height, r.width, r.height)
 
 class NPC(pygame.sprite.Sprite):
-    def __init__(self, x, y, name, image, dialogs,   thing = None, ):
+    def __init__(self, x, y, name, image, dialogs):
         pygame.sprite.Sprite.__init__(self)
         self.x = x
         self.y = y
@@ -141,38 +141,49 @@ class NPC(pygame.sprite.Sprite):
         self.face = pygame.image.load("images/johnF.png").convert_alpha()
         self.rect = self.image.get_rect()
         self.rect.left, self.rect.top = (x, y)
-        self.thing = thing
         self.moving = False
         self.level = 0
         self.dialogs = dialogs
         self.text = None
-        self.font = pygame.font.Font(None, 50)
+        self.text_player = None
+        self.face_player = pl_face
+        self.font = pygame.font.Font(None, 20)
 
     def get_event(self, event, player):
         if event.type == pygame.MOUSEBUTTONUP and event.button == 1 and self.rect.collidepoint(event.pos):
-            for i in player.board.board:
-                if self.dialogs[self.level][2] in i or self.dialogs[self.level][2] == 0:
-                    self.text = self.font.render(self.dialogs[self.level][1], 1,  pygame.Color("black"), pygame.SRCALPHA)
+            for i in range(len(player.board.board)):
+                if self.dialogs[self.level][3] in player.board.board[i] or not self.dialogs[self.level][3]:
+                    if self.dialogs[self.level][3]:
+                        player.board.board[i][player.board.board[i].index(self.dialogs[self.level][3])] = 0
+                    self.text = self.font.render(self.dialogs[self.level][0], 1,  pygame.Color("black"), pygame.SRCALPHA)
+                    if self.dialogs[self.level][2]:
+                        self.text_player = self.font.render(self.dialogs[self.level][2], 1, pygame.Color("black"), pygame.SRCALPHA)
                     if self.level != len(self.dialogs)-1:
+
                         self.level+=1
-                    else:
-                        if self.thing:
-                            f = False
-                            for i in range(len(player.board.board)):
-                                if 0 in player.board.board[i]:
-                                    player.player.board.board[i][player.board.board.index(0)] = self.thing
-                                    self.thing = 0
-                                    f = True
-                            if f:
-                                self.text = self.font.render("Освободите свой инвентарь.", 1, pygame.Color("black"),
-                                                             pygame.SRCALPHA)
+
+                    if len(self.dialogs[self.level])== 5:
+                        f = False
+                        for i in range(len(player.board.board)):
+                            if 0 in player.board.board[i]:
+                                player.board.board[i][player.board.board[i].index(0)] = self.dialogs[self.level][4]
+                                f = True
+                                break
+                        if not f:
+                            self.text = self.font.render("Освободите свой инвентарь.", 1, pygame.Color("black"),
+                                                         pygame.SRCALPHA)
                     text = self.text
+                    text_pl = self.text_player
                     self.text = None
-                    return (text, self.face)
-            self.text = self.font.render(self.dialogs[self.level][0], 1, pygame.Color("black"), pygame.SRCALPHA)
+                    self.text_player = None
+                    if text_pl:
+                        return [(text, self.face), (text_pl, self.face_player)]
+                    else:
+                        return  [(text, self.face)]
+            self.text = self.font.render(self.dialogs[self.level][1], 1, pygame.Color("black"), pygame.SRCALPHA)
             text = self.text
             self.text = None
-            return (text, self.face)
+            return [(text, self.face)]
 
     def move(self):
         if self.to_go-self.rect.width > self.x:
@@ -201,11 +212,12 @@ class DialogBox:
 
     def update(self, dialog):
         if dialog:
-            if len(self.dialogs) == 3:
-                self.dialogs.pop(0)
-                self.dialogs.append(dialog)
-            else:
-                self.dialogs.append(dialog)
+            for i in dialog:
+                if len(self.dialogs) == 3:
+                    self.dialogs.pop(0)
+                    self.dialogs.append(i)
+                else:
+                    self.dialogs.append(i)
 
     def render(self, surface):
         count = 0
@@ -417,7 +429,59 @@ class Map:
             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
         ]
         self.npc = [NPC(232, 288 + DELTA, "h", "john",
-                 [("Привет, есть свечка?", "Спасибо", "x"), ("Я думаю тебе стоит пойти вниз", '', None)]), NPC(640, 288 + DELTA, "h", "john",
+                 [("Привет, проходи. У меня есть для тебя задание",
+                   "",
+                   "",
+                   None),
+
+                  ("Ты же знаешь, что 3 квартира давно заброшена? Недавно я нашел ключи от нее. Но я боюсь туда зайти. Я до ужаса боюсь крыс. Я слышу по ночам там шуршание.",
+                   '',
+                   "",
+                   None),
+
+                  ("Ты не мог бы осмотреть комнату за меня? можешь забрать что-нибудь оттуда. Я дам тебе ключи, но перед этим, ты можешь принести свечу, уж больно темновато тут.",
+                   "",
+                   "Да, конечно",
+                   None),
+
+                  ("Спасибо, Но не мог бы ты найти свечу, без нее мне не найти ключа",
+                   "",
+                   "",
+                   None),
+
+                  ("Отлично, Вот, держи",
+                   "Без свечки я не найду ключа",
+                   "",
+                   "x"),
+
+                  ("Вот это да!",
+                   "Я не вижу у тебя за спиной мешок!",
+                   "",
+                   "r"),
+
+                  ("Слушай, я знаю, что ты хочешь сбежать.",
+                   "",
+                   "",
+                   None),
+
+                    ("Джейн из 2 квартиры живет тут больше всех. Я думаю если ты подаришь ей что нибудь, то она может тебе помочь.",
+                     "",
+                     "А что она любит? Может в этом барахле найдется что-нибудь",
+                     None),
+
+                  ("Я знаю, она любит музыку.Ты можешь дать ей что-нибудь и разговорить ее.",
+                   "",
+                   "Хорошо, я подумаю",
+                   None,
+                   'r'),
+
+                  ("Удачи",
+                   "",
+                   "",
+                   None)
+
+
+                  ]), NPC(640, 288 + DELTA, "h", "john",
                  [("Привет, есть свечка?", "Спасибо", "x"), ("Я думаю тебе стоит пойти вниз", '', None)])]
         self.obj = []
         self.obj1 = []
