@@ -30,13 +30,18 @@ lom = pygame.image.load("images/lom.png").convert_alpha()
 pl_face = pygame.image.load("images/player_face.png").convert_alpha()
 
 class Wall:
-    def __init__(self):
+    def __init__(self, x, y):
         self.id = 1
         self.width = SCALE
         self.height = SCALE
-        self.x = None
-        self.y = None
+        self.x = x
+        self.y = y
         self.color = pygame.Color("black")
+
+    def render(self, surf):
+        s = pygame.Surface((self.width, self.height))
+        pygame.draw.rect(s, self.color, (0, 0, self.width, self.height))
+        surf.blit(s, (self.x, self.y))
 
 
 class Ladder:
@@ -83,6 +88,7 @@ class Player(pygame.sprite.Sprite):
         self.inventory = []
         self.showInventory = False
         self.board = brd.Board(5, 5, self.inventory)
+        self.In_rect = pygame.Rect(WIN_WIDTH - self.board.render().get_rect().width, 0, self.board.render().get_rect().width, self.board.render().get_rect().height)
 
     def move(self, mouse_pos):
         self.mouse_pos = mouse_pos
@@ -125,9 +131,7 @@ class Player(pygame.sprite.Sprite):
         screen.blit(self.image, (self.rect.x, self.rect.y))
         if self.showInventory:
             inv = self.board.render()
-            r = inv.get_rect()
-            screen.blit(inv, (self.rect.x - r.width, self.rect.y - r.height))
-            self.In_rect = pygame.Rect(self.rect.x - r.width, self.rect.y - r.height, r.width, r.height)
+            screen.blit(inv, (self.In_rect.x, self.In_rect.y))
 
 class NPC(pygame.sprite.Sprite):
     def __init__(self, x, y, name, image, dialogs):
@@ -259,7 +263,7 @@ class Entity(pygame.sprite.Sprite):
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             self.pressed = self.Rect.collidepoint(event.pos)
 
-        elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+        elif event.type == pygame.MOUSEBUTTONUP and event.button == 1 and self.Rect.colliderect(player.rect):
             if self.pressed:
                 self.showInventory = True
                 player.showInventory = True
@@ -335,7 +339,7 @@ class Door(Entity):
                 self.image = pygame.image.load("images/" + self.img + "F.png").convert_alpha()
             else:
                 self.image = pygame.image.load("images/" + self.img + '.png').convert_alpha()
-        elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+        elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and (self.Rect.colliderect(player.rect) or self.Rect.colliderect(pygame.Rect(player.rect.x-player.rect.width, player.rect.y, player.rect.width, player.rect.height))):
             if self.Rect.collidepoint(event.pos):
                 self.change_state(player)
 
@@ -491,7 +495,7 @@ class Map:
             self.obj.append(
                 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                 0, 0, 0, 0])
+                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],)
             for j in range(len(self.objects[i])):
                 if self.objects[i][j] == 3:
                     obj = Entity(x, y + DELTA, "shelf",  [])
@@ -532,8 +536,8 @@ class Map:
                     obj = Door(x, y + DELTA, "Door1", "x", self.npc[1])
                     self.obj1.append(obj)
                     self.obj[i][j] = obj
-                x += Wall().width
-            y += Wall().height
+                x += SCALE
+            y += SCALE
             x = 0
     def render(self, screen):
         x = 0
@@ -541,9 +545,10 @@ class Map:
         for i in range(len(self.objects)):
             for j in range(len(self.objects[i])):
                 if self.objects[i][j] == 1:
-                    surf = pygame.Surface((Wall().width, Wall().height))
-                    surf.fill(Wall().color)
-                    screen.blit(surf, (x, y+DELTA))
+                    obj = (Wall(x, y+DELTA))
+                    surf = pygame.Surface((obj.width, obj.height))
+                    surf.fill(obj.color)
+                    screen.blit(surf, (x, y + DELTA))
                 elif self.objects[i][j] == 2:
                     self.obj[i][j].render(screen)
                 elif self.objects[i][j] == 10:
@@ -562,13 +567,13 @@ class Map:
                     screen.blit(wall8, (x, y + DELTA))
                 elif self.objects[i][j] == 20:
                     screen.blit(roof, (x, y + DELTA))
-                x += Wall().width
-            y += Wall().height
+                x += SCALE
+            y += SCALE
             x = 0
 
             for k in self.obj:
                 for p in k:
-                    if p and type(p) != Ladder :
+                    if p and type(p) not in [Ladder, Wall] :
                         p.render(screen)
 
             for k in self.npc:
@@ -599,21 +604,23 @@ def main():
 
             for i in range(len(map.objects)):
                 for j in range(len(map.objects[i])):
-                    if map.objects[i][j] == 2:
-                        if e.type == pygame.MOUSEBUTTONDOWN and e.button == 1:
-                            y = len(map.objects) - 1 - player.stage * 7
-                            flag = False
-                            for k in range(len(map.objects[y])):
-                                if map.objects[y][k] == 30:
-                                    if map.obj[y][k].Rect.collidepoint(e.pos):
+                    if e.type == pygame.MOUSEBUTTONDOWN and e.button == 1:
+                        y = len(map.objects) - 1 - player.stage * 7
+                        flag = False
+                        for k in range(len(map.objects[y])):
+                            if map.objects[y][k] in [30, 40, 50, 60] and map.objects[y][k] != map.objects[i][j]:
+                                if map.obj[y][k].Rect.collidepoint(e.pos):
+                                    flag = True
+                                if e.pos[0] < player.rect.x:
+                                    if e.pos[0] <= map.obj[y][k].Rect.x + map.obj[y][k].Rect.width <= player.rect.x and \
+                                                    map.obj[y][k].state == False:
                                         flag = True
-                                    if e.pos[0] < player.rect.x:
-                                        if e.pos[0] <= map.obj[y][k].Rect.x + map.obj[y][k].Rect.width <= player.rect.x and map.obj[y][k].state == False:
-                                            flag = True
-                                    else:
-                                        if player.rect.x <= map.obj[y][k].Rect.x <= e.pos[0] and map.obj[y][k].state == False:
-                                            flag = True
-                            if not flag:
+                                else:
+                                    if player.rect.x <= map.obj[y][k].Rect.x <= e.pos[0] and map.obj[y][
+                                        k].state == False:
+                                        flag = True
+                        if not flag:
+                            if map.objects[i][j] == 2:
                                 if map.obj[i][j].rect.collidepoint(e.pos) and not player.on_ladder:
                                     player.moving = True
                                     player.move(e.pos[0])
@@ -625,6 +632,13 @@ def main():
                                         player.on_top_ladder = True
                                         height = player.rect.y - player.rect.height + 160 + SCALE
                                     player.on_ladder = True
+                            if map.objects[i][j] in [3, 4, 5, 6, 7, 8, 9, 30, 40, 50, 60]:
+                                if map.obj[i][j].Rect.collidepoint(e.pos):
+                                    player.moving = True
+                                    if e.pos[0] > player.rect.x:
+                                        player.move(e.pos[0] - player.rect.width)
+                                    else:
+                                        player.move(e.pos[0] + player.rect.width // 2)
                     if map.objects[i][j] in [3, 4, 5, 6, 7, 8, 9]:
                         map.obj[i][j].get_event(e, player)
                     if map.objects[i][j] in [30, 40, 50, 60]:
@@ -636,7 +650,7 @@ def main():
                 y = len(map.objects) - 1 - player.stage*7
                 flag = False
                 for i in range(len(map.objects[y])):
-                    if map.objects[y][i] == 30:
+                    if map.objects[y][i]in [30, 40, 50, 60]:
                         if map.obj[y][i].Rect.collidepoint(e.pos):
                             flag = True
                         if e.pos[0] < player.rect.x:
@@ -645,11 +659,18 @@ def main():
                         else:
                             if player.rect.x <= map.obj[y][i].Rect.x <= e.pos[0] and map.obj[y][i].state == False:
                                 flag = True
-
+                    elif map.objects[y+1][i] == 1:
+                        if e.pos[0] < player.rect.x:
+                            if e.pos[0] <= i*SCALE  <= player.rect.x:
+                                flag = True
+                        else:
+                            if player.rect.x <= i*SCALE  <= e.pos[0]:
+                                flag = True
                 if not flag:
                     player.moving = True
                     player.move(e.pos[0])
-
+            if e.type == pygame.KEYDOWN and e.key == pygame.K_TAB:
+                player.showInventory = ~player.showInventory
             for l in map.npc:
                 dialog.update(l.get_event(e, player))
         if (player.on_bottom_ladder or player.on_top_ladder) and not player.moving:
@@ -667,7 +688,8 @@ def main():
         for l in map.obj1:
             l.get_event(None, player)
         player.draw(screen)
-        clock.tick(30)
+        clock.tick(60)
+        print(clock.get_fps())
         pygame.display.flip()
 
 
