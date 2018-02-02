@@ -15,6 +15,8 @@ pygame.init()
 clock = pygame.time.Clock()
 screen = pygame.display.set_mode(DISPLAY)  # Создаем окошко
 #подгружаем текстуры, которые не будут меняться)
+player_img = pygame.image.load("images/player.jpg").convert_alpha()
+player_img.set_colorkey(pygame.Color("white"))
 wall1 = pygame.image.load("images/wall1.png").convert()
 wall2 = pygame.image.load("images/wall2.png").convert()
 wall3 = pygame.image.load("images/wall3.png").convert()
@@ -82,8 +84,8 @@ class Player(pygame.sprite.Sprite):
         self.default_x = x
         self.default_y = y
         self.mouse_pos = 0
-        self.image = pygame.Surface((self.width, self.height))
-        self.image.fill(pygame.Color("#888888"))
+        self.image = pygame.transform.scale(player_img.subsurface((332, 30, 50, 125)), (32, 64))
+        #self.image.fill(pygame.Color("#888888"))
         self.rect = pygame.Rect(x, y, self.width, self.height)
         self.inventory = []
         self.showInventory = False
@@ -320,6 +322,33 @@ class Entity(pygame.sprite.Sprite):
             r = inv.get_rect()
             surface.blit(inv, (self.x - r.width, self.y - r.height))
             self.In_rect = pygame.Rect(self.x - r.width, self.y - r.height, r.width, r.height)
+
+
+class Animation:
+    def __init__(self, sprites=None, time=100):
+        self.sprites = sprites
+        self.time = time
+        self.work_time = 0
+        self.skip_frame = 0
+        self.frame = 0
+
+    def update(self, dt):
+        self.work_time += dt
+        # Считаем сколько кадров надо перелистнуть
+        self.skip_frame = self.work_time / self.time
+        if self.skip_frame > 0:
+            # Не забываем, что у нас, при смене кадров с частотой в
+            # 100 мс, вполне могло уже пройти 133 мс, и важно не
+            # забыть про эти 33 мс.
+            self.work_time = self.work_time % self.time
+            self.frame += self.skip_frame
+            if self.frame >= len(self.sprites):
+                self.frame = 0
+
+    def get_sprite(self):
+        return self.sprites[self.frame]
+
+
 
 class Door(Entity):
     def __init__(self, x, y, image, key=None, npc=None):
