@@ -15,7 +15,7 @@ pygame.init()
 clock = pygame.time.Clock()
 screen = pygame.display.set_mode(DISPLAY)  # Создаем окошко
 #подгружаем текстуры, которые не будут меняться)
-player_img = pygame.image.load("images/player.jpg").convert_alpha()
+player_img = pygame.image.load("images/player.png").convert_alpha()
 player_img.set_colorkey(pygame.Color("white"))
 wall1 = pygame.image.load("images/wall1.png").convert()
 wall2 = pygame.image.load("images/wall2.png").convert()
@@ -71,6 +71,8 @@ class Ladder:
 class Player(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
+        self.left = False
+        self.right = False
         self.stage = 1
         self.on_bottom_ladder = False
         self.on_top_ladder = False
@@ -84,7 +86,7 @@ class Player(pygame.sprite.Sprite):
         self.default_x = x
         self.default_y = y
         self.mouse_pos = 0
-        self.image = pygame.transform.scale(player_img.subsurface((332, 30, 50, 125)), (32, 64))
+        self.image = pygame.transform.scale(player_img.subsurface((530, 30, 50, 125)), (32, 64))
         #self.image.fill(pygame.Color("#888888"))
         self.rect = pygame.Rect(x, y, self.width, self.height)
         self.inventory = []
@@ -95,12 +97,16 @@ class Player(pygame.sprite.Sprite):
     def move(self, mouse_pos):
         self.mouse_pos = mouse_pos
         if self.mouse_pos > self.rect.x:
+            self.right = True
             self.current_speed = self.move_speed
 
         if self.mouse_pos < self.rect.x:
+            self.left = True
             self.current_speed = -self.move_speed
 
         if self.mouse_pos == self.rect.x:
+            self.right = False
+            self.left = False
             self.moving = False
             self.current_speed = 0
             return False
@@ -341,12 +347,13 @@ class Animation:
             # 100 мс, вполне могло уже пройти 133 мс, и важно не
             # забыть про эти 33 мс.
             self.work_time = self.work_time % self.time
-            self.frame += self.skip_frame
+            #self.frame += self.skip_frame
+            self.frame += 1
             if self.frame >= len(self.sprites):
                 self.frame = 0
 
     def get_sprite(self):
-        return self.sprites[self.frame]
+        return self.sprites[int(self.frame)]
 
 
 
@@ -362,7 +369,6 @@ class Door(Entity):
         if not event:
             self.npc.move()
         elif event.type == pygame.MOUSEMOTION:
-            was_collided = self.collided
             self.collided = self.Rect.collidepoint(event.pos)
             if self.collided:
                 self.image = pygame.image.load("images/" + self.img + "F.png").convert_alpha()
@@ -614,10 +620,20 @@ class Map:
 def main():
     running = True
 
+    anim = [pygame.transform.scale(player_img.subsurface((12, 31, 56, 124)), (32, 64)),pygame.transform.scale(player_img.subsurface((93, 31, 41, 124)), (26, 64)),
+            pygame.transform.scale(player_img.subsurface((162, 31, 68 ,123)), (32, 64)), pygame.transform.scale(player_img.subsurface((252, 31, 61, 125)), (32, 64))]
+    left_anim = [pygame.transform.scale(player_img.subsurface((478, 182, 56, 124)), (32, 64)),
+            pygame.transform.scale(player_img.subsurface((404, 182, 41, 124)), (26, 64)),
+            pygame.transform.scale(player_img.subsurface((316, 182, 68, 123)), (32, 64)),
+            pygame.transform.scale(player_img.subsurface((233, 181, 61, 125)), (32, 64))]
+    player_anim = list()
+    player_anim.append(Animation(anim, 180))
+    player_anim.append(Animation(left_anim, 180))
     pygame.display.set_caption("VeryVeryGoodGame2.0")  # Пишем в шапку
     # будем использовать как фон
     #screen.fill(pygame.Color(BACKGROUND_COLOR))  # Заливаем поверхность сплошным цветом
 
+    counter = 0
     screen.blit(bg, (0, 0))
     player = Player(16, 720-64-16)
     player.draw(screen)
@@ -710,6 +726,21 @@ def main():
 
         if player.moving:
             player.move(player.mouse_pos)
+            if counter == 8:
+                if player.right:
+                    for i in player_anim:
+                        i.update(dt)
+                    player.image = player_anim[0].get_sprite()
+                    counter = 0
+                elif player.left:
+                    for i in player_anim:
+                        i.update(dt)
+                    player.image = player_anim[1].get_sprite()
+                    counter = 0
+        if not player.moving:
+            counter = 0
+            player.image = pygame.transform.scale(player_img.subsurface((530, 30, 50, 125)), (32, 64))
+        counter += 1
 
 
         map.render(screen)
@@ -717,7 +748,7 @@ def main():
         for l in map.obj1:
             l.get_event(None, player)
         player.draw(screen)
-        clock.tick(60)
+        dt = clock.tick(60)
         print(clock.get_fps())
         pygame.display.flip()
 
