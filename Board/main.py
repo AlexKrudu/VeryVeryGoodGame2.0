@@ -97,10 +97,12 @@ class Player(pygame.sprite.Sprite):
     def move(self, mouse_pos):
         self.mouse_pos = mouse_pos
         if self.mouse_pos > self.rect.x:
+            self.left = False
             self.right = True
             self.current_speed = self.move_speed
 
         if self.mouse_pos < self.rect.x:
+            self.right = False
             self.left = True
             self.current_speed = -self.move_speed
 
