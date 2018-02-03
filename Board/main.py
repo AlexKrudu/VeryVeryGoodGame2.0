@@ -666,7 +666,7 @@ def main():
                                         flag = True
                         if not flag:
                             if map.objects[i][j] == 2:
-                                if map.obj[i][j].rect.collidepoint(e.pos) and not player.on_ladder:
+                                if map.obj[i][j].rect.collidepoint(e.pos) and not player.on_ladder and not map.obj[i][j].rect.colliderect(player.rect):
                                     player.moving = True
                                     player.move(e.pos[0])
 
@@ -696,7 +696,7 @@ def main():
                 flag = False
                 for i in range(len(map.objects[y])):
                     if map.objects[y][i]in [30, 40, 50, 60]:
-                        if map.obj[y][i].Rect.collidepoint(e.pos):
+                        if map.obj[y][i].Rect.collidepoint(e.pos) and map.obj[y][i].state == False:
                             flag = True
                         if e.pos[0] < player.rect.x:
                             if e.pos[0] <= map.obj[y][i].Rect.x +  map.obj[y][i].Rect.width <= player.rect.x and map.obj[y][i].state == False:
@@ -726,7 +726,7 @@ def main():
 
         if player.moving:
             player.move(player.mouse_pos)
-            if counter == 8:
+            if counter == 6:
                 if player.right:
                     for i in player_anim:
                         i.update(dt)
@@ -748,7 +748,7 @@ def main():
         for l in map.obj1:
             l.get_event(None, player)
         player.draw(screen)
-        dt = clock.tick(60)
+        dt = clock.tick(120)
         print(clock.get_fps())
         pygame.display.flip()
 
