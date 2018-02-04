@@ -38,6 +38,22 @@ class Board:
                     rect = image.get_rect()
                     rect.left, rect.top = (j * self.cell_size + self.left, i * self.cell_size + self.top)
                     surface.blit(image, rect)
+                elif self.board[i][j] == 'c':
+                    image = main.key
+                    rect = image.get_rect()
+                    rect.left, rect.top = (j * self.cell_size + self.left, i * self.cell_size + self.top)
+                    surface.blit(image, rect)
+                elif self.board[i][j] == 'g':
+                    image = main.guitar
+                    rect = image.get_rect()
+                    rect.left, rect.top = (j * self.cell_size + self.left, i * self.cell_size + self.top)
+                    surface.blit(image, rect)
+                elif self.board[i][j] == 'p':
+                    image = main.bag
+                    rect = image.get_rect()
+                    rect.left, rect.top = (j * self.cell_size + self.left, i * self.cell_size + self.top)
+                    surface.blit(image, rect)
+
 
                 pygame.draw.rect(surface, pygame.Color("white"), (
                 j * self.cell_size + self.left, i * self.cell_size + self.top, self.cell_size, self.cell_size), 1)
