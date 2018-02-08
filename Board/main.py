@@ -32,6 +32,7 @@ lom = pygame.image.load("images/lom.png").convert_alpha()
 key = pygame.image.load("images/c.png").convert_alpha()
 bag = pygame.image.load("images/p.png").convert_alpha()
 guitar = pygame.image.load("images/g.png").convert_alpha()
+john_image = pygame.image.load("images/john.png").convert_alpha()
 pl_face = pygame.image.load("images/player_face.png").convert_alpha()
 
 class Wall:
@@ -156,7 +157,7 @@ class NPC(pygame.sprite.Sprite):
         self.to_go = x
         self.name = name
         self.move_speed = 1
-        self.image = pygame.image.load("images/john.png").convert_alpha()
+        self.image = pygame.transform.scale(john_image.subsurface((31, 13, 40, 137)), (32, 68))
         self.face = pygame.image.load("images/johnF.png").convert_alpha()
         self.rect = self.image.get_rect()
         self.rect.left, self.rect.top = (x, y)
@@ -208,6 +209,7 @@ class NPC(pygame.sprite.Sprite):
             return [(text, self.face)]
 
     def move(self):
+        self.moving = True
         if self.to_go-self.rect.width > self.x:
             self.x += 1
             self.rect.x+=1
@@ -372,6 +374,7 @@ class Door(Entity):
     def get_event(self, event, player):
         if not event:
             self.npc.move()
+            #self.npc.moving = True
         elif event.type == pygame.MOUSEMOTION:
             self.collided = self.Rect.collidepoint(event.pos)
             if self.collided:
@@ -419,7 +422,7 @@ class Door(Entity):
                     break
             if self.npc:
                 self.npc.to_go = self.Rect.x
-                self.npc.moving = True
+                #self.npc.moving = True
 
     def render(self, surface):
         if self.npc and (self.npc.rect.x == self.Rect.x - self.npc.rect.width or self.npc.rect.x == self.Rect.x) and not self.state and  self.npc_door:
@@ -673,6 +676,13 @@ def main():
             pygame.transform.scale(player_img.subsurface((404, 182, 41, 124)), (26, 64)),
             pygame.transform.scale(player_img.subsurface((316, 182, 68, 123)), (32, 64)),
             pygame.transform.scale(player_img.subsurface((233, 181, 61, 125)), (32, 64))]
+    john_right_anim = [pygame.transform.scale(john_image.subsurface((106, 158, 22, 122)), (27, 68)),
+            pygame.transform.scale(john_image.subsurface((160, 159, 30, 121)), (30, 68)),
+            pygame.transform.scale(john_image.subsurface((237, 162, 53, 118)), (41, 68)),
+            pygame.transform.scale(john_image.subsurface((366, 160, 36, 120)), (28, 68)),
+            pygame.transform.scale(john_image.subsurface((447, 165, 46, 115)), (35, 68))]
+    john_anim = list()
+    john_anim.append(Animation(john_right_anim, 180))
     player_anim = list()
     player_anim.append(Animation(anim, 180))
     player_anim.append(Animation(left_anim, 180))
@@ -681,6 +691,7 @@ def main():
     #screen.fill(pygame.Color(BACKGROUND_COLOR))  # Заливаем поверхность сплошным цветом
 
     counter = 0
+    john_counter = 0
     screen.blit(bg, (0, 0))
     player = Player(16, 720-64-16)
     player.draw(screen)
@@ -785,6 +796,16 @@ def main():
                             i.update(dt)
                         player.image = player_anim[1].get_sprite()
                         counter = 0
+        if map.npc[0].moving:
+            if john_counter == 6:
+                for i in john_anim:
+                    i.update(dt)
+                map.npc[0].image = john_anim[0].get_sprite()
+                john_counter = 0
+        if not map.npc[0].moving:
+            map.npc[0].image = pygame.transform.scale(john_image.subsurface((31, 13, 40, 137)), (32, 68))
+            john_counter = 0
+
         if not player.moving:
             if player.on_ladder:
                 player.image = pygame.Surface((0, 0))
@@ -792,6 +813,7 @@ def main():
                 counter = 0
                 player.image = pygame.transform.scale(player_img.subsurface((530, 30, 50, 125)), (32, 64))
         counter += 1
+        john_counter += 1
 
 
         map.render(screen)
