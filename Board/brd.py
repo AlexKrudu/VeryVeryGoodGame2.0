@@ -7,7 +7,7 @@ class Board:
         self.inventory = inventory
         self.width = width
         self.height = height
-        self.cell_size = 20
+        self.cell_size = 40
         self.top = 0
         self.left = 0
         self.board = [[0 for _ in range(width)] for _ in range(height)]
@@ -60,6 +60,7 @@ class Board:
         return surface
 
     def get_click(self, mouse_pos, thing=''):
+        print(mouse_pos)
         cell = self.get_cell( mouse_pos)
         if cell:
            return self.on_click(cell, thing=thing)

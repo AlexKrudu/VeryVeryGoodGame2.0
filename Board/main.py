@@ -33,6 +33,7 @@ key = pygame.image.load("images/c.png").convert_alpha()
 bag = pygame.image.load("images/p.png").convert_alpha()
 guitar = pygame.image.load("images/g.png").convert_alpha()
 john_image = pygame.image.load("images/john.png").convert_alpha()
+jane_image = pygame.image.load("images/jane.png").convert_alpha()
 pl_face = pygame.image.load("images/player_face.png").convert_alpha()
 
 class Wall:
@@ -150,15 +151,17 @@ class Player(pygame.sprite.Sprite):
             screen.blit(inv, (self.In_rect.x, self.In_rect.y))
 
 class NPC(pygame.sprite.Sprite):
-    def __init__(self, x, y, name, image, dialogs):
+    d = {"john":john_image, "jane":jane_image, "tom":john_image}
+
+    def __init__(self, x, y, name, dialogs):
         pygame.sprite.Sprite.__init__(self)
         self.x = x
         self.y = y
         self.to_go = x
         self.name = name
         self.move_speed = 1
-        self.image = pygame.transform.scale(john_image.subsurface((31, 13, 40, 137)), (32, 68))
-        self.face = pygame.image.load("images/johnF.png").convert_alpha()
+        self.image = pygame.transform.scale(NPC.d[name].subsurface((0, 0, 50, 123)), (32, 64))
+        self.face = pygame.image.load("images/"+name+"F.png").convert_alpha()
         self.rect = self.image.get_rect()
         self.rect.left, self.rect.top = (x, y)
         self.moving = False
@@ -273,6 +276,9 @@ class Entity(pygame.sprite.Sprite):
         self.thing = None
 
     def get_event(self, event, player):
+        if not player.rect.colliderect(self.Rect) and self.showInventory:
+            self.showInventory = False
+            player.showInventory = False
         if event.type == pygame.MOUSEMOTION:
             was_collided = self.collided
             self.collided = self.Rect.collidepoint(event.pos)
@@ -399,27 +405,23 @@ class Door(Entity):
                 self.image = pygame.image.load("images/" + self.img + '.png').convert_alpha()
                 self.Rect = pygame.Rect(self.Rect.x, self.Rect.y, self.image.get_rect().width, self.Rect.height)
         else:
-            f = False
+
             for i in range(len(player.board.board)):
-                for j in range(len(player.board.board[i])):
-                    if player.board.board[i][j] == self.key:
-                        player.board.board[i][j] = 0
-                        self.state = ~self.state
-                        if self.state:
-                            self.img += "O"
-                            self.image = pygame.image.load("images/" + self.img + '.png').convert_alpha()
-                            self.Rect = pygame.Rect(self.Rect.x, self.Rect.y, self.image.get_rect().width, self.Rect.height)
-                            self.key = None
-                            f = True
+                print(player.board.board[i], self.key)
+                if self.key in player.board.board[i]:
+                    player.board.board[i][player.board.board[i].index(self.key)] = 0
+                    self.state = ~self.state
+                    if self.state:
+                        self.img += "O"
+                        self.image = pygame.image.load("images/" + self.img + '.png').convert_alpha()
+                        self.Rect = pygame.Rect(self.Rect.x, self.Rect.y, self.image.get_rect().width, self.Rect.height)
+                        self.key = None
 
-                        else:
-                            self.img = self.img[:-1]
-                            self.image = pygame.image.load("images/" + self.img + '.png').convert_alpha()
-                            self.Rect = pygame.Rect(self.Rect.x, self.Rect.y, self.image.get_rect().width, self.Rect.height)
-                            f = True
-
-                if f:
-                    break
+                    else:
+                        self.img = self.img[:-1]
+                        self.image = pygame.image.load("images/" + self.img + '.png').convert_alpha()
+                        self.Rect = pygame.Rect(self.Rect.x, self.Rect.y, self.image.get_rect().width, self.Rect.height)
+                break
             if self.npc:
                 self.npc.to_go = self.Rect.x
                 #self.npc.moving = True
@@ -474,7 +476,7 @@ class Map:
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
         ]
-        self.npc = [NPC(232, 288 + DELTA, "h", "john",
+        self.npc = [NPC(232, 288 + DELTA, "john",
                  [("Привет, проходи. У меня есть для тебя задание",
                    "",
                    "",
@@ -504,7 +506,7 @@ class Map:
                    "",
                    "",
                    None,
-                   "с"),
+                   "c"),
 
                   ("Вот это да!",
                    "Я не вижу у тебя за спиной мешок!",
@@ -532,11 +534,11 @@ class Map:
                    None)
 
 
-                  ]), NPC(640, 288 + DELTA, "h", "john",
+                  ]), NPC(640, 288 + DELTA, "jane",
                  [("А что это у тебя в руках?",
                    "Можно потише, у еня ребенок спит",
                    "",
-                   "r"),
+                   "g"),
 
                   ("Если ты думаешь, что если я одинокая женщина с ребенком, то ты можешь взять меня простым подарком? Даже не думай",
                    "",
@@ -563,15 +565,42 @@ class Map:
                    "А если шантажировать его? Сказать, что если он не откроет дверь, то мы сдадим его?",
                    None),
 
-                  ("Хорошая идея. Если честно, меня от него тошнит",
+                  ("Хорошая идея. Если честно, меня от него тошнит. И вот, покажи ему это. это досье на него.",
                    "",
-                   "Тогда я пошел",
-                   None),
+                   "Хорошо. Тогда я пошел",
+                   None,
+                   "v"),
 
                   ("Я верю в тебя",
                    "",
                    "",
-                   None)])]
+                   None)]),
+
+                NPC(700, 16 + DELTA, "tom", [
+                        ("Что это у тебя? Урод, а ну дай сюда",
+                         "А ну пошел вон отсюда!",
+                         "",
+                         "v"),
+
+                        ("Что тебе надо?",
+                         "Если ты сейчас же не откроешь мне дверь-этот листок увидят все. Что тут у нас: Политиче..",
+                         "",
+                         None),
+
+                        ("Нет! Стой! Я сам не знаю где ключ!",
+                        "",
+                        "Врешь! Я сейчас пройдусь ломом по твоей пустой башке, если ты не скажешь где ключ!",
+                        None),
+
+                        ("Да не знаю я, где этот ключ",
+                         "Ты же ведь не собираешься.. не-е-ет",
+                         "Черт, ладно, теперь надо достать ключ.",
+                         "r")
+
+                    ])
+                    ]
+
+
         self.obj = []
         self.obj1 = []
         x = 0
@@ -676,13 +705,19 @@ def main():
             pygame.transform.scale(player_img.subsurface((404, 182, 41, 124)), (26, 64)),
             pygame.transform.scale(player_img.subsurface((316, 182, 68, 123)), (32, 64)),
             pygame.transform.scale(player_img.subsurface((233, 181, 61, 125)), (32, 64))]
-    john_right_anim = [pygame.transform.scale(john_image.subsurface((106, 158, 22, 122)), (27, 68)),
-            pygame.transform.scale(john_image.subsurface((160, 159, 30, 121)), (30, 68)),
-            pygame.transform.scale(john_image.subsurface((237, 162, 53, 118)), (41, 68)),
-            pygame.transform.scale(john_image.subsurface((366, 160, 36, 120)), (28, 68)),
-            pygame.transform.scale(john_image.subsurface((447, 165, 46, 115)), (35, 68))]
+    john_right_anim = [pygame.transform.scale(john_image.subsurface((50, 0, 50, 123)), (32, 64)),
+            pygame.transform.scale(john_image.subsurface((100, 0, 50, 123)), (32, 64)),
+            pygame.transform.scale(john_image.subsurface((150, 0, 50, 123)), (32, 64)),
+            pygame.transform.scale(john_image.subsurface((200, 0, 50, 123)), (32, 64)),
+            pygame.transform.scale(john_image.subsurface((250, 0, 45, 123)), (32, 64)),]
+    jane_right_anim = [pygame.transform.scale(jane_image.subsurface((50, 0, 50, 123)), (32, 64)),
+                       pygame.transform.scale(jane_image.subsurface((100, 0, 50, 123)), (32, 64)),
+                       pygame.transform.scale(jane_image.subsurface((150, 0, 50, 123)), (32, 64)),
+                       pygame.transform.scale(jane_image.subsurface((200, 0, 50, 123)), (32, 64)) ]
     john_anim = list()
+    jane_anim = list()
     john_anim.append(Animation(john_right_anim, 180))
+    jane_anim.append(Animation(jane_right_anim, 180))
     player_anim = list()
     player_anim.append(Animation(anim, 180))
     player_anim.append(Animation(left_anim, 180))
@@ -692,6 +727,7 @@ def main():
 
     counter = 0
     john_counter = 0
+    jane_counter = 0
     screen.blit(bg, (0, 0))
     player = Player(16, 720-64-16)
     player.draw(screen)
@@ -796,6 +832,7 @@ def main():
                             i.update(dt)
                         player.image = player_anim[1].get_sprite()
                         counter = 0
+
         if map.npc[0].moving:
             if john_counter == 6:
                 for i in john_anim:
@@ -803,8 +840,18 @@ def main():
                 map.npc[0].image = john_anim[0].get_sprite()
                 john_counter = 0
         if not map.npc[0].moving:
-            map.npc[0].image = pygame.transform.scale(john_image.subsurface((31, 13, 40, 137)), (32, 68))
+            map.npc[0].image = pygame.transform.scale(john_image.subsurface((0, 0, 50, 123)), (32, 64))
             john_counter = 0
+
+        if map.npc[1].moving:
+            if jane_counter == 5:
+                for i in jane_anim:
+                    i.update(dt)
+                map.npc[1].image = jane_anim[0].get_sprite()
+                jane_counter = 0
+        if not map.npc[1].moving:
+            map.npc[1].image = pygame.transform.scale(jane_image.subsurface((0, 0, 50, 123)), (32, 64))
+            jane_counter = 0
 
         if not player.moving:
             if player.on_ladder:
@@ -814,7 +861,7 @@ def main():
                 player.image = pygame.transform.scale(player_img.subsurface((530, 30, 50, 125)), (32, 64))
         counter += 1
         john_counter += 1
-
+        jane_counter+= 1
 
         map.render(screen)
         dialog.render(screen)
