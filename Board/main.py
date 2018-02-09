@@ -34,6 +34,7 @@ bag = pygame.image.load("images/p.png").convert_alpha()
 guitar = pygame.image.load("images/g.png").convert_alpha()
 john_image = pygame.image.load("images/john.png").convert_alpha()
 jane_image = pygame.image.load("images/jane.png").convert_alpha()
+tom_image = pygame.image.load("images/tom.png").convert_alpha()
 pl_face = pygame.image.load("images/player_face.png").convert_alpha()
 
 class Wall:
@@ -151,7 +152,7 @@ class Player(pygame.sprite.Sprite):
             screen.blit(inv, (self.In_rect.x, self.In_rect.y))
 
 class NPC(pygame.sprite.Sprite):
-    d = {"john":john_image, "jane":jane_image, "tom":john_image}
+    d = {"john":john_image, "jane":jane_image, "tom":tom_image}
 
     def __init__(self, x, y, name, dialogs):
         pygame.sprite.Sprite.__init__(self)
@@ -576,7 +577,7 @@ class Map:
                    "",
                    None)]),
 
-                NPC(700, 16 + DELTA, "tom", [
+                NPC(700, 380 + DELTA, "tom", [
                         ("Что это у тебя? Урод, а ну дай сюда",
                          "А ну пошел вон отсюда!",
                          "",
