@@ -13,6 +13,7 @@ DELTA = 240
 on_ladder = False
 pygame.init()
 clock = pygame.time.Clock()
+ladder_group = pygame.sprite.Group()
 screen = pygame.display.set_mode(DISPLAY)  # Создаем окошко
 #подгружаем текстуры, которые не будут меняться)
 player_img = pygame.image.load("images/player.png").convert_alpha()
@@ -52,8 +53,9 @@ class Wall:
         surf.blit(s, (self.x, self.y))
 
 
-class Ladder:
+class Ladder(pygame.sprite.Sprite):
     def __init__(self, x, y):
+        pygame.sprite.Sprite.__init__(self)
         self.id = 2
         self.width = SCALE
         self.height = SCALE
@@ -64,6 +66,7 @@ class Ladder:
         self.rect.top = y
         self.rect.left = x
         self.color = pygame.Color("orange")
+        self.add(ladder_group)
 
 
     def on_click(self, player):
@@ -151,6 +154,7 @@ class Player(pygame.sprite.Sprite):
             inv = self.board.render()
             screen.blit(inv, (self.In_rect.x, self.In_rect.y))
 
+
 class NPC(pygame.sprite.Sprite):
     d = {"john":john_image, "jane":jane_image, "tom":tom_image}
 
@@ -230,6 +234,8 @@ class NPC(pygame.sprite.Sprite):
         surface.blit(self.image, (self.x, self.y))
 
 
+class EnemyNPC(NPC):
+    d = {"tom":tom_image}
 
 
 class DialogBox:
@@ -468,7 +474,7 @@ class Map:
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 40, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 30, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 30, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 40, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 70, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 30, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 13, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -577,7 +583,7 @@ class Map:
                    "",
                    None)]),
 
-                NPC(700, 380 + DELTA, "tom", [
+                NPC(700, 400 + DELTA, "tom", [
                         ("Что это у тебя? Урод, а ну дай сюда",
                          "А ну пошел вон отсюда!",
                          "",
@@ -651,6 +657,10 @@ class Map:
                     obj = Door(x, y + DELTA, "Door1", "d", self.npc[1])
                     self.obj1.append(obj)
                     self.obj[i][j] = obj
+                elif self.objects[i][j] == 70:
+                    obj = Door(x, y + DELTA, "Door1", "d", self.npc[2])
+                    self.obj1.append(obj)
+                    self.obj[i][j] = obj
                 x += SCALE
             y += SCALE
             x = 0
@@ -715,8 +725,15 @@ def main():
                        pygame.transform.scale(jane_image.subsurface((100, 0, 50, 123)), (32, 64)),
                        pygame.transform.scale(jane_image.subsurface((150, 0, 50, 123)), (32, 64)),
                        pygame.transform.scale(jane_image.subsurface((200, 0, 50, 123)), (32, 64)) ]
+    tom_left_anim = [pygame.transform.scale(tom_image.subsurface((50, 0, 50, 123)), (32, 64)),
+                     pygame.transform.scale(tom_image.subsurface((100, 0, 50, 123)), (32, 64)),
+                     pygame.transform.scale(tom_image.subsurface((150, 0, 50, 123)), (32, 64)),
+                     pygame.transform.scale(tom_image.subsurface((200, 0, 50, 123)), (32, 64)),
+                     ]
+    tom_anim = list()
     john_anim = list()
     jane_anim = list()
+    tom_anim.append(Animation(tom_left_anim, 180))
     john_anim.append(Animation(john_right_anim, 180))
     jane_anim.append(Animation(jane_right_anim, 180))
     player_anim = list()
@@ -729,6 +746,7 @@ def main():
     counter = 0
     john_counter = 0
     jane_counter = 0
+    tom_counter = 0
     screen.blit(bg, (0, 0))
     player = Player(16, 720-64-16)
     player.draw(screen)
@@ -748,7 +766,7 @@ def main():
                         y = len(map.objects) - 1 - player.stage * 7
                         flag = False
                         for k in range(len(map.objects[y])):
-                            if map.objects[y][k] in [30, 40, 50, 60] and map.objects[y][k] != map.objects[i][j]:
+                            if map.objects[y][k] in [30, 40, 50, 60, 70] and map.objects[y][k] != map.objects[i][j]:
                                 if map.obj[y][k].Rect.collidepoint(e.pos):
                                     flag = True
                                 if e.pos[0] < player.rect.x:
@@ -771,7 +789,7 @@ def main():
                                         player.on_top_ladder = True
                                         height = player.rect.y - player.rect.height + 160 + SCALE
 
-                            if map.objects[i][j] in [3, 4, 5, 6, 7, 8, 9, 30, 40, 50, 60]:
+                            if map.objects[i][j] in [3, 4, 5, 6, 7, 8, 9, 30, 40, 50, 60, 70]:
                                 if map.obj[i][j].Rect.collidepoint(e.pos):
                                     player.moving = True
                                     if e.pos[0] > player.rect.x:
@@ -780,7 +798,7 @@ def main():
                                         player.move(e.pos[0] + player.rect.width // 2)
                     if map.objects[i][j] in [3, 4, 5, 6, 7, 8, 9]:
                         map.obj[i][j].get_event(e, player)
-                    if map.objects[i][j] in [30, 40, 50, 60]:
+                    if map.objects[i][j] in [30, 40, 50, 60, 70]:
                         map.obj[i][j].get_event(e, player)
 
             if e.type == pygame.MOUSEBUTTONDOWN and e.button == 3 and not player.on_ladder:
@@ -790,7 +808,7 @@ def main():
                 y = len(map.objects) - 1 - player.stage*7
                 flag = False
                 for i in range(len(map.objects[y])):
-                    if map.objects[y][i]in [30, 40, 50, 60]:
+                    if map.objects[y][i]in [30, 40, 50, 60, 70]:
                         if map.obj[y][i].Rect.collidepoint(e.pos) and map.obj[y][i].state == False:
                             flag = True
                         if e.pos[0] < player.rect.x:
@@ -814,10 +832,11 @@ def main():
             for l in map.npc:
                 dialog.update(l.get_event(e, player))
         if (player.on_bottom_ladder or player.on_top_ladder) and not player.moving:
-            if player.move_ladder(height):
-                player.on_bottom_ladder = False
-                player.on_top_ladder = False
-                player.on_ladder = False
+            if pygame.sprite.spritecollideany(player, ladder_group) or player.on_ladder:
+                if player.move_ladder(height):
+                    player.on_bottom_ladder = False
+                    player.on_top_ladder = False
+                    player.on_ladder = False
 
         if player.moving:
             player.move(player.mouse_pos)
@@ -854,6 +873,16 @@ def main():
             map.npc[1].image = pygame.transform.scale(jane_image.subsurface((0, 0, 50, 123)), (32, 64))
             jane_counter = 0
 
+        if map.npc[2].moving:
+            if tom_counter == 5:
+                for i in tom_anim:
+                    i.update(dt)
+                map.npc[2].image = tom_anim[0].get_sprite()
+                tom_counter = 0
+        if not map.npc[2].moving:
+            map.npc[2].image = pygame.transform.scale(tom_image.subsurface((0, 0, 50, 123)), (32, 64))
+            tom_counter = 0
+
         if not player.moving:
             if player.on_ladder:
                 player.image = pygame.Surface((0, 0))
@@ -863,6 +892,7 @@ def main():
         counter += 1
         john_counter += 1
         jane_counter+= 1
+        tom_counter += 1
 
         map.render(screen)
         dialog.render(screen)
