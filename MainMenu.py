@@ -91,7 +91,7 @@ class ButtonMenu(LabelMenu):
         elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
             self.pressed = False
 
-
+def
 BackGround = Background()
 gui = GUI()
 gui.add_element(LabelMenu((600, 30,300,70), "Escape from War"))

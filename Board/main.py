@@ -98,7 +98,7 @@ class Player(pygame.sprite.Sprite):
         self.image = pygame.transform.scale(player_img.subsurface((530, 30, 50, 125)), (32, 64))
         #self.image.fill(pygame.Color("#888888"))
         self.rect = pygame.Rect(x, y, self.width, self.height)
-        self.inventory = []
+        self.inventory = ["r"]
         self.showInventory = False
         self.board = brd.Board(5, 5, self.inventory)
         self.In_rect = pygame.Rect(WIN_WIDTH - self.board.render().get_rect().width, 0, self.board.render().get_rect().width, self.board.render().get_rect().height)
@@ -133,8 +133,8 @@ class Player(pygame.sprite.Sprite):
                 return False
             if self.rect.y == height:
                 self.stage += 1
-                self.image = pygame.Surface((self.width, self.height))
                 self.on_ladder = False
+                print("ssss")
                 return True
         else:
             if self.rect.y < height:
@@ -142,9 +142,8 @@ class Player(pygame.sprite.Sprite):
                 return False
             if self.rect.y == height:
                 self.stage -= 1
-                self.image = pygame.Surface((self.width, self.height))
-                self.image.fill(pygame.Color("#888888"))
                 self.on_ladder = False
+                print("sssss")
                 return True
 
 
@@ -236,6 +235,38 @@ class NPC(pygame.sprite.Sprite):
 
 class EnemyNPC(NPC):
     d = {"tom":tom_image}
+    def __init__(self, x, y, name, dialogs):
+        super().__init__( x, y, name, dialogs)
+        self.die = False
+
+    def get_event(self, event, player):
+        if event.type == pygame.MOUSEBUTTONUP and event.button == 1 and self.rect.collidepoint(event.pos) and self.rect.colliderect(player.rect) and not self.die :
+            for i in range(len(player.board.board)):
+                if self.dialogs[self.level][3] in player.board.board[i] or not self.dialogs[self.level][3]:
+                    if self.dialogs[self.level][3]:
+                        player.board.board[i][player.board.board[i].index(self.dialogs[self.level][3])] = 0
+                    self.text = self.font.render(self.dialogs[self.level][0], 1, pygame.Color("black"), pygame.SRCALPHA)
+                    if self.dialogs[self.level][2]:
+                        self.text_player = self.font.render(self.dialogs[self.level][2], 1, pygame.Color("black"),
+                                                            pygame.SRCALPHA)
+                    if self.level != len(self.dialogs) - 1:
+                        self.level += 1
+                    else:
+                        self.die = True
+
+                    text = self.text
+                    text_pl = self.text_player
+                    self.text = None
+                    self.text_player = None
+                    print(player.board.board)
+                    if text_pl:
+                        return [(text, self.face), (text_pl, self.face_player)]
+                    else:
+                        return [(text, self.face)]
+                self.text = self.font.render(self.dialogs[self.level][1], 1, pygame.Color("black"), pygame.SRCALPHA)
+                text = self.text
+                self.text = None
+                return [(text, self.face)]
 
 
 class DialogBox:
@@ -430,7 +461,10 @@ class Door(Entity):
                         self.Rect = pygame.Rect(self.Rect.x, self.Rect.y, self.image.get_rect().width, self.Rect.height)
                 break
             if self.npc:
-                self.npc.to_go = self.Rect.x
+                for i in range(len(player.board.board)):
+                    if self.npc.dialogs[0][3] in player.board.board[i] or self.npc.dialogs[0][3] is None:
+                        self.npc.to_go = self.Rect.x
+                        break
                 #self.npc.moving = True
 
     def render(self, surface):
@@ -583,15 +617,15 @@ class Map:
                    "",
                    None)]),
 
-                NPC(700, 400 + DELTA, "tom", [
+                EnemyNPC(700, 400 + DELTA, "tom", [
                         ("Что это у тебя? Урод, а ну дай сюда",
                          "А ну пошел вон отсюда!",
                          "",
                          "v"),
 
                         ("Что тебе надо?",
-                         "Если ты сейчас же не откроешь мне дверь-этот листок увидят все. Что тут у нас: Политиче..",
                          "",
+                         "Если ты сейчас же не откроешь мне дверь-этот листок увидят все. Что тут у нас: Политиче..",
                          None),
 
                         ("Нет! Стой! Я сам не знаю где ключ!",
@@ -599,10 +633,15 @@ class Map:
                         "Врешь! Я сейчас пройдусь ломом по твоей пустой башке, если ты не скажешь где ключ!",
                         None),
 
-                        ("Да не знаю я, где этот ключ",
-                         "Ты же ведь не собираешься.. не-е-ет",
-                         "Черт, ладно, теперь надо достать ключ.",
-                         "r")
+                        ("Ты же ведь не собираешься.. не-е-ет",
+                         "Да не знаю я, где этот ключ",
+                         "Черт, только руки испачкал...",
+                         "r"),
+
+                        (None,
+                         None,
+                         None,
+                         None)
 
                     ])
                     ]
@@ -759,10 +798,10 @@ def main():
         for e in pygame.event.get():  # Обрабатываем события
             if e.type == pygame.QUIT:
                 running = False
-
+            choose_ladder = False
             for i in range(len(map.objects)):
                 for j in range(len(map.objects[i])):
-                    if e.type == pygame.MOUSEBUTTONDOWN and e.button == 1:
+                    if e.type == pygame.MOUSEBUTTONDOWN and e.button == 1 and not player.on_ladder:
                         y = len(map.objects) - 1 - player.stage * 7
                         flag = False
                         for k in range(len(map.objects[y])):
@@ -777,7 +816,11 @@ def main():
                                     if player.rect.x <= map.obj[y][k].Rect.x <= e.pos[0] and map.obj[y][k].state == False:
                                         flag = True
                         if not flag:
-                            if map.objects[i][j] == 2:
+
+                            if map.objects[i][j] == 2 and not choose_ladder:
+                                if (player.on_top_ladder or player.on_bottom_ladder) and not player.on_ladder:
+                                    player.on_top_ladder = False
+                                    player.on_bottom_ladder = False
                                 if not player.on_ladder and map.obj[i][j].rect.collidepoint(e.pos) :
                                     player.moving = True
                                     player.move(map.obj[i][j].rect.x+8)
@@ -788,14 +831,18 @@ def main():
                                     elif e.pos[1] > player.rect.y + player.rect.height and i - y < 9:
                                         player.on_top_ladder = True
                                         height = player.rect.y - player.rect.height + 160 + SCALE
+                                    choose_ladder = True
 
-                            if map.objects[i][j] in [3, 4, 5, 6, 7, 8, 9, 30, 40, 50, 60, 70]:
+                            elif map.objects[i][j] in [3, 4, 5, 6, 7, 8, 9, 30, 40, 50, 60, 70]:
+
                                 if map.obj[i][j].Rect.collidepoint(e.pos):
+                                    player.on_top_ladder = False
+                                    player.on_bottom_ladder = False
                                     player.moving = True
                                     if e.pos[0] > player.rect.x:
-                                        player.move(e.pos[0] - player.rect.width)
+                                        player.move(map.obj[i][j].Rect.x - player.rect.width//2)
                                     else:
-                                        player.move(e.pos[0] + player.rect.width // 2)
+                                        player.move(map.obj[i][j].Rect.x + player.rect.width // 2)
                     if map.objects[i][j] in [3, 4, 5, 6, 7, 8, 9]:
                         map.obj[i][j].get_event(e, player)
                     if map.objects[i][j] in [30, 40, 50, 60, 70]:
@@ -831,6 +878,7 @@ def main():
                 player.showInventory = ~player.showInventory
             for l in map.npc:
                 dialog.update(l.get_event(e, player))
+        print(player.on_bottom_ladder, player.on_top_ladder)
         if (player.on_bottom_ladder or player.on_top_ladder) and not player.moving:
             if pygame.sprite.spritecollideany(player, ladder_group) or player.on_ladder:
                 if player.move_ladder(height):
