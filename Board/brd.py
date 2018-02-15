@@ -43,6 +43,16 @@ class Board:
                     rect = image.get_rect()
                     rect.left, rect.top = (j * self.cell_size + self.left, i * self.cell_size + self.top)
                     surface.blit(image, rect)
+                elif self.board[i][j] == 'd':
+                    image = main.key2
+                    rect = image.get_rect()
+                    rect.left, rect.top = (j * self.cell_size + self.left, i * self.cell_size + self.top)
+                    surface.blit(image, rect)
+                elif self.board[i][j] == 'v':
+                    image = main.paper
+                    rect = image.get_rect()
+                    rect.left, rect.top = (j * self.cell_size + self.left, i * self.cell_size + self.top)
+                    surface.blit(image, rect)
                 elif self.board[i][j] == 'g':
                     image = main.guitar
                     rect = image.get_rect()
@@ -60,8 +70,9 @@ class Board:
         return surface
 
     def get_click(self, mouse_pos, thing=''):
-        print(mouse_pos)
+
         cell = self.get_cell( mouse_pos)
+        print(cell)
         if cell:
            return self.on_click(cell, thing=thing)
 
