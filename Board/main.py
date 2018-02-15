@@ -37,6 +37,7 @@ john_image = pygame.image.load("images/john.png").convert_alpha()
 jane_image = pygame.image.load("images/jane.png").convert_alpha()
 tom_image = pygame.image.load("images/tom.png").convert_alpha()
 pl_face = pygame.image.load("images/player_face.png").convert_alpha()
+tom_death_image = pygame.image.load("images/tom_death.png").convert_alpha()
 
 class Wall:
     def __init__(self, x, y):
@@ -238,6 +239,7 @@ class EnemyNPC(NPC):
     def __init__(self, x, y, name, dialogs):
         super().__init__( x, y, name, dialogs)
         self.die = False
+        self.dead = False
 
     def get_event(self, event, player):
         if event.type == pygame.MOUSEBUTTONUP and event.button == 1 and self.rect.collidepoint(event.pos) and self.rect.colliderect(player.rect) and not self.die :
@@ -635,10 +637,10 @@ class Map:
 
                         ("Ты же ведь не собираешься.. не-е-ет",
                          "Да не знаю я, где этот ключ",
-                         "Черт, только руки испачкал...",
+                         "НЫААААААААААААА",
                          "r"),
 
-                        (None,
+                        ("Аггггхххх",
                          None,
                          None,
                          None)
@@ -769,6 +771,19 @@ def main():
                      pygame.transform.scale(tom_image.subsurface((150, 0, 50, 123)), (32, 64)),
                      pygame.transform.scale(tom_image.subsurface((200, 0, 50, 123)), (32, 64)),
                      ]
+
+    tom_die_anim = [pygame.transform.scale(tom_death_image.subsurface((0, 0, 50, 123)), (32, 64)),
+                    pygame.transform.scale(tom_death_image.subsurface((50, 0, 50, 123)), (32, 64)),
+                    pygame.transform.scale(tom_death_image.subsurface((100, 0, 50, 123)), (32, 64)),
+                    pygame.transform.scale(tom_death_image.subsurface((150, 0, 50, 123)), (32, 64)),
+                    pygame.transform.scale(tom_death_image.subsurface((200, 0, 50, 123)), (32, 64)),
+                    pygame.transform.scale(tom_death_image.subsurface((250, 0, 50, 123)), (32, 64)),
+                    pygame.transform.scale(tom_death_image.subsurface((300, 0, 50, 123)), (32, 64)),
+                    pygame.transform.scale(tom_death_image.subsurface((350, 0, 50, 123)), (32, 64)),
+                    pygame.transform.scale(tom_death_image.subsurface((400, 0, 100, 123)), (64, 64)),
+                    pygame.transform.scale(tom_death_image.subsurface((500, 0, 100, 123)), (64, 64)),
+                    pygame.transform.scale(tom_death_image.subsurface((600, 0, 100, 123)), (64, 64)),
+                    ]
     tom_anim = list()
     john_anim = list()
     jane_anim = list()
@@ -778,6 +793,8 @@ def main():
     player_anim = list()
     player_anim.append(Animation(anim, 180))
     player_anim.append(Animation(left_anim, 180))
+    tom_anim.append(Animation(tom_die_anim, 180))
+    sprite_counter = -1
     pygame.display.set_caption("VeryVeryGoodGame2.0")  # Пишем в шапку
     # будем использовать как фон
     #screen.fill(pygame.Color(BACKGROUND_COLOR))  # Заливаем поверхность сплошным цветом
@@ -786,6 +803,7 @@ def main():
     john_counter = 0
     jane_counter = 0
     tom_counter = 0
+    tom_death_counter = 0
     screen.blit(bg, (0, 0))
     player = Player(16, 720-64-16)
     player.draw(screen)
@@ -900,6 +918,20 @@ def main():
                             i.update(dt)
                         player.image = player_anim[1].get_sprite()
                         counter = 0
+        print(map.npc[2].die)
+        if map.npc[2].die and not map.npc[2].dead:
+            if sprite_counter == 7:
+                map.npc[2].dead = True
+            print(tom_death_counter)
+            if tom_death_counter == 10:
+                for x in tom_anim:
+                    x.update(dt)
+                map.npc[2].image = tom_anim[1].get_sprite()
+                print("Картинка меняется!")
+                tom_death_counter = 0
+                sprite_counter += 1
+        if not map.npc[2].die:
+            tom_death_counter = 0
 
         if map.npc[0].moving:
             if john_counter == 6:
@@ -927,9 +959,11 @@ def main():
                     i.update(dt)
                 map.npc[2].image = tom_anim[0].get_sprite()
                 tom_counter = 0
-        if not map.npc[2].moving:
+        if not map.npc[2].moving and not map.npc[2].die:
             map.npc[2].image = pygame.transform.scale(tom_image.subsurface((0, 0, 50, 123)), (32, 64))
             tom_counter = 0
+        if map.npc[2].dead:
+            map.npc[2].image = pygame.transform.scale(tom_death_image.subsurface((600, 0, 100, 123)), (64, 64))
 
         if not player.moving:
             if player.on_ladder:
@@ -941,6 +975,7 @@ def main():
         john_counter += 1
         jane_counter+= 1
         tom_counter += 1
+        tom_death_counter += 1
 
         map.render(screen)
         dialog.render(screen)
