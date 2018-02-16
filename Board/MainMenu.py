@@ -9,7 +9,7 @@ screen = pygame.display.set_mode(size)
 class Background(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)  #call Sprite initializer
-        self.image = pygame.image.load("images\menubg.png")
+        self.image = pygame.image.load("images/menubg.png")
 
         self.rect = self.image.get_rect()
         self.rect.left, self.rect.top = (0, 0)
@@ -104,7 +104,7 @@ def start_screen():
     gui = GUI()
     gui.add_element(LabelMenu((600, 30, 300, 70), "Escape from War"))
     gui.add_element(ButtonMenu((800, 310, 170, 50), "новая игра"))
-    pygame.mixer.music.load("music\menubg.ogg")
+    pygame.mixer.music.load("music/menubg.ogg")
     pygame.mixer.music.play()
 
     while True:
@@ -119,5 +119,32 @@ def start_screen():
 
         gui.render(screen)
         gui.update()
+        pygame.display.flip()
+
+
+def predyslovie():
+    image = pygame.image.load("images/begin.png")
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            print(event.type)
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                return
+
+        screen.blit(image, (0, 0))
+        pygame.display.flip()
+
+
+def pobeda1():
+    image = pygame.image.load("images/win.png")
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                return
+
+        screen.blit(image, (0, 0))
         pygame.display.flip()
 

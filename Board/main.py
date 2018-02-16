@@ -107,7 +107,7 @@ class Player(pygame.sprite.Sprite):
         self.image = pygame.transform.scale(player_img.subsurface((530, 30, 50, 125)), (32, 64))
         #self.image.fill(pygame.Color("#888888"))
         self.rect = pygame.Rect(x, y, self.width, self.height)
-        self.inventory = []
+        self.inventory = ["v"]
         self.showInventory = False
         self.board = brd.Board(5, 5, self.inventory)
         self.In_rect = pygame.Rect(WIN_WIDTH - self.board.render().get_rect().width, WIN_HEIGHT-self.board.render().get_rect().height, self.board.render().get_rect().width, self.board.render().get_rect().height)
@@ -370,7 +370,7 @@ class Entity(pygame.sprite.Sprite):
                         break
                 if f:
                     self.thing = self.board.get_click(
-                    (event.pos[0] - self.Rect.x + self.In_rect.width, event.pos[1] - self.Rect.y + self.In_rect.height),
+                    (event.pos[0] - (WIN_WIDTH - self.In_rect.width), event.pos[1] - self.In_rect.y),
                     self.thing)
                     if self.thing:
                         player.board.board[p[0]][p[1]] = self.thing
@@ -382,8 +382,8 @@ class Entity(pygame.sprite.Sprite):
         if self.showInventory:
             inv = self.board.render()
             r = inv.get_rect()
-            surface.blit(inv, (self.x - r.width, self.y - r.height))
-            self.In_rect = pygame.Rect(self.x - r.width, self.y - r.height, r.width, r.height)
+            self.In_rect = pygame.Rect(WIN_WIDTH - r.width, 300, r.width, r.height)
+            surface.blit(inv, self.In_rect)
 
 
 class Animation:
@@ -779,7 +779,7 @@ def main():
                      pygame.transform.scale(tom_image.subsurface((200, 0, 50, 123)), (32, 64)),
                      ]
 
-    tom_die_anim = [pygame.transform.scale(tom_death_image.subsurface((0, 0, 50, 123)), (32, 64)),
+    tom_die_anim = [
                     pygame.transform.scale(tom_death_image.subsurface((50, 0, 50, 123)), (32, 64)),
                     pygame.transform.scale(tom_death_image.subsurface((100, 0, 50, 123)), (32, 64)),
                     pygame.transform.scale(tom_death_image.subsurface((150, 0, 50, 123)), (32, 64)),
@@ -820,9 +820,6 @@ def main():
     dialog = DialogBox(50, 10)
     font = pygame.font.Font(None, 20)
     dialog.update([(font.render("Черт, совсем забыл! Надо спуститься на 2 этаж к Джону. Ему что-то нужно", 1, pygame.Color("black") ), pl_face)])
-    screen.blit(begin_img, (0, 0))
-    pygame.display.flip()
-    time.delay(5000)
     is_level_up = False
     while running:  # Основной цикл программы
         screen.blit(bg, (0, 0))
@@ -974,7 +971,7 @@ def main():
         if not map.npc[2].moving and not map.npc[2].die:
             map.npc[2].image = pygame.transform.scale(tom_image.subsurface((0, 0, 50, 123)), (32, 64))
             tom_counter = 0
-        if map.npc[2].dead:
+        if map.npc[2].dead and not map.npc[2].die:
             map.npc[2].image = pygame.transform.scale(tom_death_image.subsurface((600, 0, 100, 123)), (64, 64))
 
         if not player.moving:
@@ -999,23 +996,16 @@ def main():
                 player.level = 2
                 if not is_level_up:
                     print(map.npc[2].level, len(map.npc[2].dialogs)-1)
-                    if map.npc[2].level != len(map.npc[2].dialogs)-1:
+                    if not map.npc[2].dead:
                         dialog.update([(font.render("Ха, вот он. Зачем ты мне врал?", 1, pygame.Color("black")), pl_face),
                                (font.render("Хорошо, можешь уйти, только ключ оставь здесь", 1, pygame.Color("black")), pygame.image.load("images/tomF.png"))])
                         is_level_up = True
-
-
-
-
 
         if player.rect.x == WIN_WIDTH-90:
             while player.rect.x <= WIN_WIDTH:
                 player.rect.x+=1
                 clock.tick(60)
                 pygame.display.flip()
-            screen.blit(win_img, (0, 0))
-            pygame.display.flip()
-            time.delay(5000)
             return
         dt = clock.tick(60)
         pygame.display.flip()
@@ -1024,5 +1014,11 @@ def main():
 if __name__ == "__main__":
     while True:
         MainMenu.start_screen()
+        MainMenu.predyslovie()
         main()
+        MainMenu.pobeda1()
 
+
+
+
+print("@Authors AlexKrudu and valer1435 all rights reserved, not for commercial using")
