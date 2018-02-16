@@ -90,7 +90,8 @@ class Player(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.left = False
         self.right = False
-        self.stage = 1
+        self.stage = 3
+        self.level = 1
         self.on_bottom_ladder = False
         self.on_top_ladder = False
         self.on_ladder = False
@@ -106,7 +107,7 @@ class Player(pygame.sprite.Sprite):
         self.image = pygame.transform.scale(player_img.subsurface((530, 30, 50, 125)), (32, 64))
         #self.image.fill(pygame.Color("#888888"))
         self.rect = pygame.Rect(x, y, self.width, self.height)
-        self.inventory = ["r", "v"]
+        self.inventory = []
         self.showInventory = False
         self.board = brd.Board(5, 5, self.inventory)
         self.In_rect = pygame.Rect(WIN_WIDTH - self.board.render().get_rect().width, WIN_HEIGHT-self.board.render().get_rect().height, self.board.render().get_rect().width, self.board.render().get_rect().height)
@@ -546,7 +547,7 @@ class Map:
                    None),
 
                   ("Отлично, где же этот ключ...",
-                   "Без свечки я не найду ключа",
+                   "Без свечки я не найду ключа. Поищи у себя",
                    "",
                    "x",),
 
@@ -640,15 +641,11 @@ class Map:
                         "Врешь! Я сейчас пройдусь ломом по твоей пустой башке, если ты не скажешь где ключ!",
                         None),
 
-                        ("Ты же ведь не собираешься.. не-е-ет",
-                         "Да не знаю я, где этот ключ",
-                         "НЫААААААААААААА",
-                         "r"),
 
                         ("Аггггхххх",
-                         None,
-                         None,
-                         None)
+                         "Ну давай, попробуй",
+                         "",
+                         "r")
 
                     ])
                     ]
@@ -674,7 +671,7 @@ class Map:
                     obj = Entity(x, y + DELTA, "bed", [])
                     self.obj[i][j] = obj
                 elif self.objects[i][j] == 6:
-                    obj = Entity(x, y + DELTA, "table1", [])
+                    obj = Entity(x, y + DELTA, "table1", ["r"])
                     self.obj[i][j] = obj
                 elif self.objects[i][j] == 7:
                     obj = Entity(x, y + DELTA, "bed2", [])
@@ -815,17 +812,18 @@ def main():
     tom_counter = 0
     tom_death_counter = 0
     screen.blit(bg, (0, 0))
-    player = Player(16, 400+DELTA)
+    player = Player(850, 176+DELTA)
     player.draw(screen)
     map = Map()
     map.render(screen)
 
     dialog = DialogBox(50, 10)
     font = pygame.font.Font(None, 20)
-    dialog.update([(font.render("Надо идти к Джону, на 2 этаж, говорит ему нужна помощь.", 1, pygame.Color("black") ), pl_face)])
+    dialog.update([(font.render("Черт, совсем забыл! Надо спуститься на 2 этаж к Джону. Ему что-то нужно", 1, pygame.Color("black") ), pl_face)])
     screen.blit(begin_img, (0, 0))
     pygame.display.flip()
     time.delay(5000)
+    is_level_up = False
     while running:  # Основной цикл программы
         screen.blit(bg, (0, 0))
         for e in pygame.event.get():  # Обрабатываем события
@@ -996,7 +994,21 @@ def main():
         for l in map.obj1:
             l.get_event(None, player)
         player.draw(screen)
-        if player.rect.x == WIN_WIDTH-30:
+        for i in player.board.board:
+            if "d" in i:
+                player.level = 2
+                if not is_level_up:
+                    print(map.npc[2].level, len(map.npc[2].dialogs)-1)
+                    if map.npc[2].level != len(map.npc[2].dialogs)-1:
+                        dialog.update([(font.render("Ха, вот он. Зачем ты мне врал?", 1, pygame.Color("black")), pl_face),
+                               (font.render("Хорошо, можешь уйти, только ключ оставь здесь", 1, pygame.Color("black")), pygame.image.load("images/tomF.png"))])
+                        is_level_up = True
+
+
+
+
+
+        if player.rect.x == WIN_WIDTH-90:
             while player.rect.x <= WIN_WIDTH:
                 player.rect.x+=1
                 clock.tick(60)
