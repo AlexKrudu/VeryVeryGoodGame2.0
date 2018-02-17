@@ -1,5 +1,6 @@
 import pygame
 import main
+from resources import *
 
 
 class Board:
