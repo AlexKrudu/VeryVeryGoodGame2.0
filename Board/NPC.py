@@ -5,8 +5,9 @@ from resources import *
 class NPC(pygame.sprite.Sprite):
     d = {"john":john_image, "jane":jane_image, "tom":tom_image}
 
-    def __init__(self, x, y, name, dialogs):
+    def __init__(self, x, y, name, steps, dialogs):
         pygame.sprite.Sprite.__init__(self)
+        self.steps = steps
         self.x = x
         self.y = y
         self.to_go = x
@@ -72,17 +73,22 @@ class NPC(pygame.sprite.Sprite):
             self.rect.x -= 1
 
         else:
+            self.steps.stop()
             self.to_go = self.x
 
             self.moving = False
+       # if self.moving:
+        #    self.steps.play()
+        #else:
+        #    self.steps.stop()
     def render(self, surface):
         surface.blit(self.image, (self.x, self.y))
 
 
 class EnemyNPC(NPC):
     d = {"tom":tom_image}
-    def __init__(self, x, y, name, dialogs):
-        super().__init__( x, y, name, dialogs)
+    def __init__(self, x, y, name, steps, dialogs):
+        super().__init__( x, y, name, steps, dialogs)
         self.die = False
         self.dead = False
 

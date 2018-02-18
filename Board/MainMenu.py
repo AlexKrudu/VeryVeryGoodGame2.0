@@ -4,6 +4,8 @@ pygame.init()
 running = True
 size = width, height = 1280, 720
 screen = pygame.display.set_mode(size)
+pygame.mixer.music.load("music/Inception.mp3")
+pygame.mixer.music.play(loops=-1)
 
 
 class Background(pygame.sprite.Sprite):
@@ -104,8 +106,6 @@ def start_screen():
     gui = GUI()
     gui.add_element(LabelMenu((600, 30, 300, 70), "Escape from War"))
     gui.add_element(ButtonMenu((800, 310, 170, 50), "новая игра"))
-    pygame.mixer.music.load("music/menubg.ogg")
-    pygame.mixer.music.play()
 
     while True:
         for event in pygame.event.get():
@@ -123,6 +123,7 @@ def start_screen():
 
 
 def predyslovie():
+    pygame.mixer.music.set_volume(0.1)
     image = pygame.image.load("images/begin.png")
     while True:
         for event in pygame.event.get():

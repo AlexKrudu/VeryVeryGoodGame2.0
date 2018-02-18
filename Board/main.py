@@ -1,6 +1,7 @@
 # Импортируем библиотеку pygame
 import pygame
 import brd
+import random
 import MainMenu
 from resources import *
 from levels import Level1
@@ -16,6 +17,7 @@ screen = pygame.display.set_mode(DISPLAY)
 class Player(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
+        self.steps = player_steps
         self.left = False
         self.right = False
         self.stage = 3
@@ -42,16 +44,21 @@ class Player(pygame.sprite.Sprite):
     def move(self, mouse_pos):
         self.mouse_pos = mouse_pos
         if self.mouse_pos > self.rect.x:
+            if not pygame.mixer.get_busy():
+                self.steps.play()
             self.left = False
             self.right = True
             self.current_speed = self.move_speed
 
         if self.mouse_pos < self.rect.x:
+            if not pygame.mixer.get_busy():
+                self.steps.play()
             self.right = False
             self.left = True
             self.current_speed = -self.move_speed
 
         if self.mouse_pos == self.rect.x:
+            self.steps.stop()
             self.right = False
             self.left = False
             self.moving = False
@@ -96,6 +103,7 @@ class DialogBox:
 
     def update(self, dialog):
         if dialog:
+            random.choice(speech).play()
             for i in dialog:
                 if len(self.dialogs) == 3:
                     self.dialogs.pop(0)
@@ -280,10 +288,10 @@ def main():
                                 flag = True
                     elif map.objects[y+1][i] == 1:
                         if e.pos[0] < player.rect.x:
-                            if e.pos[0] <= i*SCALE  <= player.rect.x:
+                            if e.pos[0] <= i*SCALE <= player.rect.x:
                                 flag = True
                         else:
-                            if player.rect.x <= i*SCALE  <= e.pos[0]:
+                            if player.rect.x <= i*SCALE <= e.pos[0]:
                                 flag = True
                 if not flag:
                     player.moving = True
@@ -314,6 +322,7 @@ def main():
                         player.image = player_anim[1].get_sprite()
                         counter = 0
         if map.npc[2].die and not map.npc[2].dead:
+            scream.play()
             if sprite_counter == 7:
                 map.npc[2].dead = True
             if tom_death_counter == 10:
@@ -326,35 +335,42 @@ def main():
             tom_death_counter = 0
 
         if map.npc[0].moving:
+            map.npc[0].steps.play(1)
             if john_counter == 6:
                 for i in john_anim:
                     i.update(dt)
                 map.npc[0].image = john_anim[0].get_sprite()
                 john_counter = 0
         if not map.npc[0].moving:
+            #map.npc[0].steps.stop()
             map.npc[0].image = pygame.transform.scale(john_image.subsurface((0, 0, 50, 123)), (32, 64))
             john_counter = 0
 
         if map.npc[1].moving:
+            map.npc[1].steps.play(1)
             if jane_counter == 5:
                 for i in jane_anim:
                     i.update(dt)
                 map.npc[1].image = jane_anim[0].get_sprite()
                 jane_counter = 0
         if not map.npc[1].moving:
+            map.npc[1].steps.stop()
             map.npc[1].image = pygame.transform.scale(jane_image.subsurface((0, 0, 50, 123)), (32, 64))
             jane_counter = 0
 
         if map.npc[2].moving:
+            map.npc[2].steps.play(1)
             if tom_counter == 5:
                 for i in tom_anim:
                     i.update(dt)
                 map.npc[2].image = tom_anim[0].get_sprite()
                 tom_counter = 0
         if not map.npc[2].moving and not map.npc[2].die:
+            map.npc[2].steps.stop()
             map.npc[2].image = pygame.transform.scale(tom_image.subsurface((0, 0, 50, 123)), (32, 64))
             tom_counter = 0
         if map.npc[2].dead and not map.npc[2].die:
+            map.npc[2].steps.stop()
             map.npc[2].image = pygame.transform.scale(tom_death_image.subsurface((600, 0, 100, 123)), (64, 64))
 
         if not player.moving:
@@ -365,7 +381,7 @@ def main():
                 player.image = pygame.transform.scale(player_img.subsurface((530, 30, 50, 125)), (32, 64))
         counter += 1
         john_counter += 1
-        jane_counter+= 1
+        jane_counter += 1
         tom_counter += 1
         tom_death_counter += 1
 
@@ -386,6 +402,7 @@ def main():
 
         if player.rect.x == WIN_WIDTH-90:
             while player.rect.x <= WIN_WIDTH:
+                player_steps.stop()
                 player.rect.x+=1
                 clock.tick(60)
                 pygame.display.flip()

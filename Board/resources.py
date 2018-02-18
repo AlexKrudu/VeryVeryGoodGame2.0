@@ -1,4 +1,4 @@
-import  pygame
+import pygame
 
 WIN_WIDTH = 1280
 WIN_HEIGHT = 720
@@ -6,6 +6,12 @@ DISPLAY = (WIN_WIDTH, WIN_HEIGHT)
 
 screen = pygame.display.set_mode(DISPLAY)
 
+player_steps = pygame.mixer.Sound('music/steps.ogg')
+player_steps1 = pygame.mixer.Sound('music/steps1.ogg')
+speech = [pygame.mixer.Sound('music/speech-entrant.wav'),
+          pygame.mixer.Sound('music/speech-inspector.wav'),
+          pygame.mixer.Sound('music/speech-out.wav')]
+scream = pygame.mixer.Sound('music/scream.ogg')
 player_img = pygame.image.load("images/player.png").convert_alpha()
 player_img.set_colorkey(pygame.Color("white"))
 wall1 = pygame.image.load("images/wall1.png").convert()
