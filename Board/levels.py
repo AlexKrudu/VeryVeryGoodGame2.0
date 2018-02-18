@@ -165,6 +165,7 @@ class Level1:
 
         self.obj = []
         self.obj1 = []
+        self.dict = {10: wall2, 11: wall1, 12: wall3, 13: wall4, 14: wall6, 15: wall7, 16: wall8, 20: roof}
         x = 0
         y = 0
         for i in range(len(self.objects)):
@@ -236,22 +237,8 @@ class Level1:
                     screen.blit(surf, (x, y + DELTA))
                 elif self.objects[i][j] == 2:
                     self.obj[i][j].render(screen)
-                elif self.objects[i][j] == 10:
-                    screen.blit(wall2, (x, y + DELTA))
-                elif self.objects[i][j] == 11:
-                    screen.blit(wall1, (x, y + DELTA))
-                elif self.objects[i][j] == 12:
-                    screen.blit(wall3, (x, y + DELTA))
-                elif self.objects[i][j] == 13:
-                    screen.blit(wall4, (x, y + DELTA))
-                elif self.objects[i][j] == 14:
-                    screen.blit(wall6, (x, y + DELTA))
-                elif self.objects[i][j] == 15:
-                    screen.blit(wall7, (x, y + DELTA))
-                elif self.objects[i][j] == 16:
-                    screen.blit(wall8, (x, y + DELTA))
-                elif self.objects[i][j] == 20:
-                    screen.blit(roof, (x, y + DELTA))
+                elif self.objects[i][j] in self.dict:
+                    screen.blit(self.dict[self.objects[i][j]], (x, y + DELTA))
                 x += SCALE
             y += SCALE
             x = 0

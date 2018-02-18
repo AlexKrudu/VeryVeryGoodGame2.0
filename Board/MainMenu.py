@@ -40,8 +40,9 @@ class GUI:
         for element in self.elements:
             get_event = getattr(element, "get_event", None)
             if callable(get_event):
-                if element.get_event(event):
-                    return True
+                r = element.get_event(event)
+                if r:
+                    return r
 
 
 
@@ -65,11 +66,12 @@ class LabelMenu:
 
 
 class ButtonMenu(LabelMenu):
-    def __init__(self, rect, text):
+    def __init__(self, rect, text, value):
         super().__init__(rect, text)
         self.bgcolor = pygame.Color("blue")
         self.pressed = False
         self.collided = False
+        self.value = value
         self.font_color = {'up': pygame.Color("black"), "collide":pygame.Color("white")}
         self.soundObj = pygame.mixer.Sound('music/menubtn.ogg')
 
@@ -93,7 +95,7 @@ class ButtonMenu(LabelMenu):
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             self.pressed = self.Rect.collidepoint(event.pos)
             if self.pressed:
-                return True
+                return self.value
         elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
             self.pressed = False
 
@@ -105,13 +107,19 @@ def start_screen():
     BackGround = Background()
     gui = GUI()
     gui.add_element(LabelMenu((600, 30, 300, 70), "Escape from War"))
-    gui.add_element(ButtonMenu((800, 310, 170, 50), "новая игра"))
+    gui.add_element(ButtonMenu((800, 310, 170, 50), "новая игра", "n"))
+    gui.add_element(ButtonMenu((800, 370, 170, 50), "правила", "r"))
+    gui.add_element(ButtonMenu((800, 430, 170, 50), "выйти", "q"))
 
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminate()
-            if gui.get_event(event):
+            if gui.get_event(event) == "q":
+                terminate()
+            elif gui.get_event(event) == "r":
+                rules()
+            elif gui.get_event(event) == "n":
                 return
 
         screen.fill([255, 255, 255])
@@ -145,7 +153,17 @@ def pobeda1():
                 terminate()
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 return
+        screen.blit(image, (0, 0))
+        pygame.display.flip()
 
+def rules():
+    image = pygame.image.load("images/rules.png")
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                return
         screen.blit(image, (0, 0))
         pygame.display.flip()
 

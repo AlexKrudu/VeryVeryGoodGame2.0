@@ -419,4 +419,4 @@ if __name__ == "__main__":
         main()
         MainMenu.pobeda1()
 
-print("@Authors AlexKrudu and valer1435 all rights not reserved, not for commercial using")
+print("@Authors AlexKrudu and valer1435 all rights is not reserved, not for commercial using")

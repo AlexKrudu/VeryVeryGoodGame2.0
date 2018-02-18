@@ -2,15 +2,6 @@ import pygame
 import brd
 from resources import *
 
-wall1 = pygame.image.load("images/wall1.png")
-wall2 = pygame.image.load("images/wall2.png")
-wall3 = pygame.image.load("images/wall3.png")
-wall4 = pygame.image.load("images/wall4.png")
-wall6 = pygame.image.load("images/wall6.png")
-wall7 = pygame.image.load("images/wall7.png")
-wall8 = pygame.image.load("images/wall8.png")
-roof = pygame.image.load("images/roof.png")
-ladder = pygame.image.load("images/ladder.png")
 
 
 class Wall:
@@ -20,12 +11,13 @@ class Wall:
         self.height = SCALE
         self.x = x
         self.y = y
+        self.Rect = pygame.Rect(x, y, SCALE, SCALE)
         self.color = pygame.Color("black")
 
     def render(self, surf):
         s = pygame.Surface((self.width, self.height))
         pygame.draw.rect(s, self.color, (0, 0, self.width, self.height))
-        surf.blit(s, (self.x, self.y))
+        surf.blit(s, (self.Rect))
 
 
 class Ladder(pygame.sprite.Sprite):
@@ -35,19 +27,16 @@ class Ladder(pygame.sprite.Sprite):
         self.width = SCALE
         self.height = SCALE
         self.image = ladder
-        self.x = x
-        self.y = y
         self.rect = self.image.get_rect()
         self.rect.top = y
         self.rect.left = x
-        self.color = pygame.Color("orange")
         self.add(ladder_group)
 
     def on_click(self, player):
         player.on_ladder = True
 
     def render(self, surface):
-        surface.blit(self.image, (self.x, self.y))
+        surface.blit(self.image, (self.rect))
 
 
 class Entity(pygame.sprite.Sprite):
