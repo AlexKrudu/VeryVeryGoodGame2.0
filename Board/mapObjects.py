@@ -61,6 +61,7 @@ class Entity(pygame.sprite.Sprite):
 
     def get_event(self, event, player):
         if not player.rect.colliderect(self.Rect) and self.showInventory:
+            table_closed.play()
             self.showInventory = False
             player.showInventory = False
         if event.type == pygame.MOUSEMOTION:
@@ -76,10 +77,12 @@ class Entity(pygame.sprite.Sprite):
         elif event.type == pygame.MOUSEBUTTONUP and event.button == 1 and self.Rect.colliderect(player.rect):
 
             if self.pressed:
+                table_opened.play()
                 self.showInventory = True
                 player.showInventory = True
 
             elif self.showInventory and not self.In_rect.collidepoint(event.pos) and not player.In_rect.collidepoint(event.pos):
+                table_closed.play()
                 self.showInventory = False
                 player.showInventory = False
                 self.thing = None

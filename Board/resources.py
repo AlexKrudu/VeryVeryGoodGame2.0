@@ -15,10 +15,12 @@ player_steps3 = pygame.mixer.Sound('music/steps.ogg')
 door_open = pygame.mixer.Sound('music/doorOpen.ogg')
 door_close = pygame.mixer.Sound('music/doorClose.ogg')
 door_closed = pygame.mixer.Sound('music/doorClosed.ogg')
+table_closed = pygame.mixer.Sound('music/Close.ogg')
+table_opened = pygame.mixer.Sound('music/Open.ogg')
 
 speech = [pygame.mixer.Sound('music/speech-entrant.wav'),
-          pygame.mixer.Sound('music/speech-inspector.wav'),
-          pygame.mixer.Sound('music/speech-out.wav')]
+          pygame.mixer.Sound('music/speech-inspector.wav')]
+
 scream = pygame.mixer.Sound('music/scream.ogg')
 player_img = pygame.image.load("images/player.png").convert_alpha()
 player_img.set_colorkey(pygame.Color("white"))

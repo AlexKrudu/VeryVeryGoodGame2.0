@@ -36,7 +36,7 @@ class Player(pygame.sprite.Sprite):
         self.mouse_pos = 0
         self.image = pygame.transform.scale(player_img.subsurface((530, 30, 50, 125)), (32, 64))
         self.rect = pygame.Rect(x, y, self.width, self.height)
-        self.inventory = ["v"]
+        self.inventory = []
         self.showInventory = False
         self.board = brd.Board(5, 5, self.inventory)
         self.In_rect = pygame.Rect(WIN_WIDTH - self.board.render().get_rect().width, WIN_HEIGHT-self.board.render().get_rect().height, self.board.render().get_rect().width, self.board.render().get_rect().height)
@@ -118,7 +118,7 @@ class DialogBox:
             surface.blit(i[1], (self.x, self.y+count))
             rendered_rect = i[0].get_rect(x=self.x+50, y=self.y+count)
             surface.blit(i[0], rendered_rect)
-            count +=50
+            count += 50
 
 class Animation:
     def __init__(self, sprites=None, time=100):
@@ -210,7 +210,7 @@ def main():
 
     dialog = DialogBox(50, 10)
     font = pygame.font.Font(None, 20)
-    dialog.update([(font.render("Черт, совсем забыл! Надо спуститься на 2 этаж к Джону. Ему что-то нужно", 1, pygame.Color("black") ), pl_face)])
+    dialog.update([(font.render("Черт, совсем забыл! Надо спуститься на 2 этаж к Джону. Ему что-то нужно", 1, pygame.Color("black")), pl_face)])
     is_level_up = False
     while running:  # Основной цикл программы
         screen.blit(bg, (0, 0))
@@ -323,8 +323,9 @@ def main():
                         counter = 0
         if map.npc[2].die and not map.npc[2].dead:
             if map.npc[2].image == tom_anim[1].get_sprite():
-                hit.play()
-                scream.play()
+                pass
+                # hit.play()
+                # scream.play()
             if sprite_counter == 7:
                 map.npc[2].dead = True
             if tom_death_counter == 10:

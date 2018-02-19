@@ -106,6 +106,8 @@ class EnemyNPC(NPC):
                         self.level += 1
                     else:
                         self.die = True
+                        hit.play()
+                        scream.play()
 
                     text = self.text
                     text_pl = self.text_player
