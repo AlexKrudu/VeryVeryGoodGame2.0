@@ -322,7 +322,9 @@ def main():
                         player.image = player_anim[1].get_sprite()
                         counter = 0
         if map.npc[2].die and not map.npc[2].dead:
-            scream.play()
+            if map.npc[2].image == tom_anim[1].get_sprite():
+                hit.play()
+                scream.play()
             if sprite_counter == 7:
                 map.npc[2].dead = True
             if tom_death_counter == 10:
@@ -335,19 +337,19 @@ def main():
             tom_death_counter = 0
 
         if map.npc[0].moving:
-            map.npc[0].steps.play(1)
+            map.npc[0].steps.play()
             if john_counter == 6:
                 for i in john_anim:
                     i.update(dt)
                 map.npc[0].image = john_anim[0].get_sprite()
                 john_counter = 0
         if not map.npc[0].moving:
-            #map.npc[0].steps.stop()
+            map.npc[0].steps.stop()
             map.npc[0].image = pygame.transform.scale(john_image.subsurface((0, 0, 50, 123)), (32, 64))
             john_counter = 0
 
         if map.npc[1].moving:
-            map.npc[1].steps.play(1)
+            map.npc[1].steps.play()
             if jane_counter == 5:
                 for i in jane_anim:
                     i.update(dt)
@@ -359,7 +361,7 @@ def main():
             jane_counter = 0
 
         if map.npc[2].moving:
-            map.npc[2].steps.play(1)
+            map.npc[2].steps.play()
             if tom_counter == 5:
                 for i in tom_anim:
                     i.update(dt)

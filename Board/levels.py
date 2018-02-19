@@ -94,7 +94,7 @@ class Level1:
                    None)
 
 
-                  ]), NPC(640, 288 + DELTA, "jane", player_steps1,
+                  ]), NPC(640, 288 + DELTA, "jane", player_steps2,
                     [("А что это у тебя в руках?",
                     "Можно потише, у еня ребенок спит",
                     "",
@@ -136,7 +136,7 @@ class Level1:
                    "",
                    None)]),
 
-                EnemyNPC(700, 400 + DELTA, "tom", player_steps1,
+                EnemyNPC(700, 400 + DELTA, "tom", player_steps3,
                          [
                         ("Что это у тебя? Урод, а ну дай сюда",
                          "А ну пошел вон отсюда!",

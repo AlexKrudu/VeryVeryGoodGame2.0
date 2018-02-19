@@ -152,31 +152,36 @@ class Door(Entity):
         if not self.key:
             self.state = ~self.state
             if self.state:
+                door_open.play()
                 self.img += "O"
                 self.image = pygame.image.load("images/" + self.img + '.png').convert_alpha()
                 self.Rect = pygame.Rect(self.Rect.x, self.Rect.y, self.image.get_rect().width, self.Rect.height)
 
             else:
+                door_close.play()
                 self.img = self.img[:-1]
                 self.image = pygame.image.load("images/" + self.img + '.png').convert_alpha()
                 self.Rect = pygame.Rect(self.Rect.x, self.Rect.y, self.image.get_rect().width, self.Rect.height)
+            return
         else:
-
             for i in range(len(player.board.board)):
                 if self.key in player.board.board[i]:
                     player.board.board[i][player.board.board[i].index(self.key)] = 0
                     self.state = ~self.state
                     if self.state:
+                        key_m.play()
+                        door_open.play()
                         self.img += "O"
                         self.image = pygame.image.load("images/" + self.img + '.png').convert_alpha()
                         self.Rect = pygame.Rect(self.Rect.x, self.Rect.y, self.image.get_rect().width, self.Rect.height)
                         self.key = None
 
                     else:
+                        door_close.play()
                         self.img = self.img[:-1]
                         self.image = pygame.image.load("images/" + self.img + '.png').convert_alpha()
                         self.Rect = pygame.Rect(self.Rect.x, self.Rect.y, self.image.get_rect().width, self.Rect.height)
-                break
+                    return
             if self.npc:
                 for i in range(len(player.board.board)):
                     if self.npc.dialogs[0][3] in player.board.board[i] or self.npc.dialogs[0][3] is None:
@@ -184,12 +189,14 @@ class Door(Entity):
                             self.npc.to_go = self.Rect.x
                         else:
                             self.npc.to_go = self.Rect.x+self.Rect.w
-                        break
-                #self.npc.moving = True
+                        return
+        door_closed.play()
+
 
     def render(self, surface):
         if self.npc and (self.npc.rect.x == self.Rect.x + self.Rect.width or self.npc.rect.x+self.npc.rect.w == self.Rect.x) and not self.state and  self.npc_door:
             self.state = ~self.state
+            door_open.play()
             self.img += "O"
             self.image = pygame.image.load("images/" + self.img + '.png').convert_alpha()
             self.Rect = pygame.Rect(self.Rect.x, self.Rect.y, self.image.get_rect().width, self.Rect.height)

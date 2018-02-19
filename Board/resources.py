@@ -5,9 +5,17 @@ WIN_HEIGHT = 720
 DISPLAY = (WIN_WIDTH, WIN_HEIGHT)
 
 screen = pygame.display.set_mode(DISPLAY)
-
+hit = pygame.mixer.Sound('music/hit.ogg')
+key_m = pygame.mixer.Sound('music/key.ogg')
 player_steps = pygame.mixer.Sound('music/steps.ogg')
-player_steps1 = pygame.mixer.Sound('music/steps1.ogg')
+player_steps1 = pygame.mixer.Sound('music/steps.ogg')
+player_steps2 = pygame.mixer.Sound('music/steps.ogg')
+player_steps3 = pygame.mixer.Sound('music/steps.ogg')
+
+door_open = pygame.mixer.Sound('music/doorOpen.ogg')
+door_close = pygame.mixer.Sound('music/doorClose.ogg')
+door_closed = pygame.mixer.Sound('music/doorClosed.ogg')
+
 speech = [pygame.mixer.Sound('music/speech-entrant.wav'),
           pygame.mixer.Sound('music/speech-inspector.wav'),
           pygame.mixer.Sound('music/speech-out.wav')]
